@@ -1,4 +1,4 @@
-import { SwordIcon } from "@phosphor-icons/react";
+import { GithubLogoIcon, SwordIcon } from "@phosphor-icons/react";
 import { Link, Outlet } from "react-router";
 
 import { Button } from "#components/ui/button.js";
@@ -18,6 +18,16 @@ function Nav() {
   return (
     <header className="border-border z-50 flex h-14 items-center gap-1 border-b px-2">
       <NavLogo />
+      <Button
+        asChild
+        className="rounded-md"
+        variant="ghost"
+      >
+        <Link to="/repos">
+          <GithubLogoIcon className="size-4" />
+          <span className="hidden sm:inline">Repos</span>
+        </Link>
+      </Button>
     </header>
   );
 }

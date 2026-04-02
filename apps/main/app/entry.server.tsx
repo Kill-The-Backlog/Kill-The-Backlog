@@ -52,7 +52,7 @@ function buildCspHeader(nonce: string) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self'",
+    "img-src 'self' https://avatars.githubusercontent.com",
     "font-src 'self'",
     connectSrc,
     workerSrc,

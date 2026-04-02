@@ -5,7 +5,7 @@ import invariant from "tiny-invariant";
 
 import { serverEnvVars } from "#lib/.server/server-env-vars.js";
 
-const SCOPES = ["read:user", "user:email"];
+const SCOPES = ["read:user", "user:email", "repo"];
 
 export type GitHubUserProfile = {
   avatarUrl: null | string;
