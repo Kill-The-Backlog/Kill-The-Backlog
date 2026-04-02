@@ -115,32 +115,32 @@ function RepoList({ repos }: { repos: Repo[] }) {
 
 function RepoRow({ repo }: { repo: Repo }) {
   return (
-    <li className="flex items-start gap-3 py-3">
-      <Avatar className="mt-0.5" size="sm">
-        <AvatarImage
-          alt={repo.ownerLogin}
-          src={repo.ownerAvatarUrl ?? undefined}
-        />
-        <AvatarFallback>{repo.ownerLogin[0]?.toUpperCase()}</AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <a
-            className="truncate text-sm font-medium hover:underline"
-            href={repo.htmlUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            {repo.fullName}
-          </a>
-          {repo.isPrivate && <PrivateBadge />}
+    <li>
+      <Link
+        className="flex items-start gap-3 py-3 transition-colors hover:bg-muted/50"
+        to={`/repos/${repo.id}`}
+      >
+        <Avatar className="mt-0.5" size="sm">
+          <AvatarImage
+            alt={repo.ownerLogin}
+            src={repo.ownerAvatarUrl ?? undefined}
+          />
+          <AvatarFallback>{repo.ownerLogin[0]?.toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-sm font-medium">
+              {repo.fullName}
+            </span>
+            {repo.isPrivate && <PrivateBadge />}
+          </div>
+          {repo.description && (
+            <p className="text-muted-foreground mt-0.5 truncate text-xs">
+              {repo.description}
+            </p>
+          )}
         </div>
-        {repo.description && (
-          <p className="text-muted-foreground mt-0.5 truncate text-xs">
-            {repo.description}
-          </p>
-        )}
-      </div>
+      </Link>
     </li>
   );
 }

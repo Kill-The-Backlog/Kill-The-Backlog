@@ -29,6 +29,12 @@ importers:
 
   apps/main:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: ^1.7.10
+        version: 1.7.10
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -331,6 +337,12 @@ packages:
   '@astrojs/telemetry@3.3.0':
     resolution: {integrity: sha512-UFBgfeldP06qu6khs/yY+q1cDAaArM2/7AEIqQ9Cuvf7B1hNLq0xDrZkct+QoIGyjq56y8IaE2I3CTvG99mlhQ==}
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
+
+  '@atlaskit/pragmatic-drag-and-drop-hitbox@1.1.0':
+    resolution: {integrity: sha512-JWt6eVp6Br2FPHRM8s0dUIHQk/jFInGP1f3ti5CdtM1Ji5/pt8Akm44wDC063Gv2i5RGseixtbW0z/t6RYtbdg==}
+
+  '@atlaskit/pragmatic-drag-and-drop@1.7.10':
+    resolution: {integrity: sha512-2oHJbThv26CVxM+N8w1X9iyvnts9f8n5+XdCHyG2DtLtqk97rsvbykUyRV2m2llpH06ZdBycycz/+H7eBgRN4A==}
 
   '@babel/code-frame@7.29.0':
     resolution: {integrity: sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==}
@@ -3113,6 +3125,9 @@ packages:
 
   binary@0.3.0:
     resolution: {integrity: sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg==}
+
+  bind-event-listener@3.0.0:
+    resolution: {integrity: sha512-PJvH288AWQhKs2v9zyfYdPzlPqf5bXbGMmhmUIY9x4dAUGIWgomO771oBQNwJnMQSnUIXhKu6sgzpBRXTlvb8Q==}
 
   bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
@@ -6913,6 +6928,9 @@ packages:
   radix3@1.1.2:
     resolution: {integrity: sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA==}
 
+  raf-schd@4.0.3:
+    resolution: {integrity: sha512-tQkJl2GRWh83ui2DiPTJz9wEiMN20syf+5oKfB03yYP7ioZcJwsIK8FjrtLwH1m7C7e+Tt2yYBlrOpdT+dyeIQ==}
+
   randomatic@3.1.1:
     resolution: {integrity: sha512-TuDE5KxZ0J461RVjrJZCJc+J+zCkTb1MbH9AQUq68sMhOMcy9jLcb3BrZKgp9q9Ncltdg4QVqWrH02W2EFFVYw==}
     engines: {node: '>= 0.10.0'}
@@ -8659,6 +8677,17 @@ snapshots:
       which-pm-runs: 1.1.0
     transitivePeerDependencies:
       - supports-color
+
+  '@atlaskit/pragmatic-drag-and-drop-hitbox@1.1.0':
+    dependencies:
+      '@atlaskit/pragmatic-drag-and-drop': 1.7.10
+      '@babel/runtime': 7.28.6
+
+  '@atlaskit/pragmatic-drag-and-drop@1.7.10':
+    dependencies:
+      '@babel/runtime': 7.28.6
+      bind-event-listener: 3.0.0
+      raf-schd: 4.0.3
 
   '@babel/code-frame@7.29.0':
     dependencies:
@@ -11525,6 +11554,8 @@ snapshots:
     dependencies:
       buffers: 0.1.1
       chainsaw: 0.1.0
+
+  bind-event-listener@3.0.0: {}
 
   bindings@1.5.0:
     dependencies:
@@ -16093,6 +16124,8 @@ snapshots:
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
   radix3@1.1.2: {}
+
+  raf-schd@4.0.3: {}
 
   randomatic@3.1.1:
     dependencies:
