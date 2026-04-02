@@ -1,14 +1,19 @@
 import tsEslint from "typescript-eslint";
 import importPlugin from "eslint-plugin-import";
 
-export default function typescriptConfig(
-  tsConfigs: string[] = ["tsconfig.json"],
-) {
+export default function typescriptConfig({
+  project,
+  tsconfigRootDir,
+}: {
+  project: string[];
+  tsconfigRootDir: string;
+}) {
   return tsEslint.config(
     {
       languageOptions: {
         parserOptions: {
-          project: tsConfigs,
+          project,
+          tsconfigRootDir,
         },
       },
     },

@@ -13,10 +13,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - cmd.{{ .Values.baseDomain }}
+        - ktb.{{ .Values.baseDomain }}
       secretName: {{ include "app.fullname" . }}-wildcard-tls
   rules:
-    - host: cmd.{{ .Values.baseDomain }}
+    - host: ktb.{{ .Values.baseDomain }}
       http:
         paths:
           - pathType: Prefix

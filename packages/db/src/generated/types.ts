@@ -5,13 +5,12 @@ export type Generated<T> =
     : ColumnType<T, T | undefined, T>;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
-export type GoogleAccount = {
+export type GitHubAccount = {
   id: Generated<number>;
   userId: number;
-  googleId: string;
+  githubId: number;
+  login: string;
   oauthAccessToken: string;
-  oauthRefreshToken: string;
-  oauthExpiry: string;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
@@ -25,6 +24,6 @@ export type User = {
   updatedAt: Timestamp;
 };
 export type DB = {
-  GoogleAccount: GoogleAccount;
+  GitHubAccount: GitHubAccount;
   User: User;
 };

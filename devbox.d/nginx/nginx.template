@@ -41,25 +41,27 @@ http {
         return 301 https://ktb.localhost;
     }
 
-    upstream ktb.localhost {
+    # Marketing website.
+    upstream www.ktb.localhost {
         server localhost:4321 fail_timeout=0;
+    }
+    server {
+        server_name www.ktb.localhost;
+        listen 443 ssl;
+        location / {
+            proxy_pass http://www.ktb.localhost;
+        }
+    }
+
+    # Product.
+    upstream ktb.localhost {
+        server localhost:5173 fail_timeout=0;
     }
     server {
         server_name ktb.localhost;
         listen 443 ssl;
         location / {
             proxy_pass http://ktb.localhost;
-        }
-    }
-
-    upstream cmd.ktb.localhost {
-        server localhost:5173 fail_timeout=0;
-    }
-    server {
-        server_name cmd.ktb.localhost;
-        listen 443 ssl;
-        location / {
-            proxy_pass http://cmd.ktb.localhost;
         }
     }
 }

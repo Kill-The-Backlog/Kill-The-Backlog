@@ -1,11 +1,11 @@
 import { data, redirect } from "react-router";
 
 import {
-  exchangeCodeForTokens,
+  exchangeCodeForAccessToken,
+  fetchGitHubUserProfile,
   validateOAuthState,
-  verifyAndExtractPayload,
-} from "#lib/.server/auth/google-oauth.js";
-import { upsertUserWithGoogleAccount } from "#lib/.server/auth/google-user-helpers.js";
+} from "#lib/.server/auth/github-oauth.js";
+import { upsertUserWithGitHubAccount } from "#lib/.server/auth/github-user-helpers.js";
 import { clearOAuthSessionMiddleware } from "#lib/.server/auth/oauth-middleware.js";
 import { getSession } from "#lib/.server/auth/session.js";
 
@@ -19,9 +19,9 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const session = getSession(context);
 
   const code = extractOAuthCode(request, session);
-  const tokens = await exchangeCodeForTokens(code);
-  const payload = await verifyAndExtractPayload(tokens.id_token);
-  const user = await upsertUserWithGoogleAccount(payload, tokens);
+  const accessToken = await exchangeCodeForAccessToken(code);
+  const profile = await fetchGitHubUserProfile(accessToken);
+  const user = await upsertUserWithGitHubAccount(profile, accessToken);
 
   session.set("userId", user.id);
   return redirect("/");
@@ -56,7 +56,7 @@ function extractOAuthCode(
 
   const queryParams = new URL(request.url).searchParams;
 
-  // Check for OAuth errors from Google
+  // Check for OAuth errors from GitHub
   const error = queryParams.get("error");
   if (error) {
     throw data(

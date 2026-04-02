@@ -52,8 +52,7 @@ function buildCspHeader(nonce: string) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,
     "style-src 'self' 'unsafe-inline'",
-    // Allow Google OAuth avatar images.
-    "img-src 'self' https://lh3.googleusercontent.com",
+    "img-src 'self'",
     "font-src 'self'",
     connectSrc,
     workerSrc,

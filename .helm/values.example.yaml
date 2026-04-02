@@ -10,9 +10,9 @@ wwwBucketHostname: example.cdn.com
 mainEnvVars:
   DB_SSL_NO_VERIFY: "true"
   DB_URL:
-  GOOGLE_OAUTH_CLIENT_ID:
-  GOOGLE_OAUTH_CLIENT_SECRET:
-  GOOGLE_OAUTH_REDIRECT_URI:
-  MAIN_ORIGIN:
+  GITHUB_OAUTH_CLIENT_ID:
+  GITHUB_OAUTH_CLIENT_SECRET:
+  GITHUB_OAUTH_REDIRECT_URI: https://ktb.example.com/auth/github/callback
+  MAIN_ORIGIN: https://ktb.example.com
   REDIS_URL:
   SESSION_SECRET:

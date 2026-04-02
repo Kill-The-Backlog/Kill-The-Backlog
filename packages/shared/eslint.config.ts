@@ -3,7 +3,10 @@ import typescriptConfig from "@ktb/eslint-configs/typescript";
 
 export default [
   ...baseConfig,
-  ...typescriptConfig(["tsconfig.json", "tsconfig.node.json"]),
+  ...typescriptConfig({
+    project: ["tsconfig.json", "tsconfig.node.json"],
+    tsconfigRootDir: ".",
+  }),
   {
     ignores: ["src/generated"],
   },

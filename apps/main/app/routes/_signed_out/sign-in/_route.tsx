@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import GoogleIcon from "#assets/google-logomark.svg?react";
+import GitHubIcon from "#assets/github-mark.svg?react";
 import { Button } from "#components/ui/button.js";
 
 export default function Route() {
@@ -11,9 +11,9 @@ export default function Route() {
           Sign in to Kill The Backlog
         </h1>
         <Button asChild size="lg">
-          <Link to="/auth/google">
-            <GoogleIcon />
-            Continue with Google
+          <Link to="/auth/github">
+            <GitHubIcon />
+            Continue with GitHub
           </Link>
         </Button>
       </div>
