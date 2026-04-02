@@ -1,0 +1,16 @@
+{{- $ctx := merge (dict) . (dict "component" "main") -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app.fullname" . }}-main
+  labels:
+    {{- include "app.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "app.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

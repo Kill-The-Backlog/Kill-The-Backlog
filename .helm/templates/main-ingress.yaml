@@ -1,0 +1,28 @@
+{{- $ctx := merge (dict) . (dict "component" "main") -}}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "app.fullname" . }}-main
+  labels:
+    {{- include "app.labels" $ctx | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/server-snippet: |
+      {{- include "app.securityServerSnippet" . | nindent 6 }}
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - cmd.{{ .Values.baseDomain }}
+      secretName: {{ include "app.fullname" . }}-wildcard-tls
+  rules:
+    - host: cmd.{{ .Values.baseDomain }}
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: {{ include "app.fullname" . }}-main
+                port:
+                  name: http

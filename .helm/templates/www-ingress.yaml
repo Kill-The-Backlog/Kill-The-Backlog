@@ -1,0 +1,34 @@
+{{- $ctx := merge (dict) . (dict "component" "www") -}}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "app.fullname" . }}-www
+  labels:
+    {{- include "app.labels" $ctx | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: {{ .Values.wwwBucketHostname }}
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/server-snippet: |
+      {{- include "app.securityServerSnippet" . | nindent 6 }}
+    # Handle directory paths by appending index.html
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/$ /index.html break;
+      rewrite ^(/[^.]*)/?$ $1/index.html break;
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ .Values.baseDomain }}
+      secretName: {{ include "app.fullname" . }}-wildcard-tls
+  rules:
+    - host: {{ .Values.baseDomain }}
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: {{ include "app.fullname" . }}-www-external
+                port:
+                  number: 443

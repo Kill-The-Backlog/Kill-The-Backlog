@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.helm/values.yaml
+.react-router
+.turbo
+
+build
+node_modules
+tmp
+
+devbox.d/nginx/fastcgi.conf
+devbox.d/nginx/ktb.localhost.crt
+devbox.d/nginx/ktb.localhost.key
+devbox.d/nginx/nginx.conf
+devbox.d/web

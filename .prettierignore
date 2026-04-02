@@ -1,0 +1,11 @@
+.claude
+.devbox
+
+pnpm-lock.yaml
+
+# Prettier doesn't play well with helm templates.
+# https://github.com/prettier/prettier/issues/6517
+.helm
+
+# Handlebars templates
+*.hbs

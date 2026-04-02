@@ -1,0 +1,31 @@
+version: "0.5"
+is_strict: true
+processes:
+  #
+  # Apps
+  #
+
+  www:
+    command: "pnpm apps:www dev --port 4321"
+
+  main:
+    command: "PORT=5173 pnpm apps:main dev"
+    depends_on:
+      nginx:
+        condition: process_started
+      postgresql:
+        condition: process_healthy
+      valkey:
+        condition: process_started
+
+  #
+  # Tools
+  #
+
+  prisma-studio:
+    command: "pnpm prisma studio --browser none"
+    depends_on:
+      nginx:
+        condition: process_started
+      postgresql:
+        condition: process_healthy

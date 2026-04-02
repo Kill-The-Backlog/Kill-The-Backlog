@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+# MCP Tool Usage
+
+Project routing on top of each MCP server’s own instructions:
+
+- **Search / research:** Prefer Perplexity (`user-perplexity`: `perplexity_search`, `perplexity_ask`) over the built-in `web_search` tool. Ask full questions with enough context; avoid bare keyword queries.
+- **Libraries & NPM:** Use Context7 (`user-context7`): `resolve-library-id`, then `query-docs`. Before relying on a package, read its docs and pair that with a Perplexity pass for usage context.

@@ -1,0 +1,65 @@
+# The nginx.conf in this folder is automatically generated from nginx.template
+# To modify your NGINX config, edit the nginx.template file.
+
+events {}
+
+http { 
+    error_log error.log error;
+    access_log access.log;
+    client_body_temp_path temp/client_body;
+    proxy_temp_path temp/proxy;
+    fastcgi_temp_path temp/fastcgi;
+    uwsgi_temp_path temp/uwsgi;
+    scgi_temp_path temp/scgi;
+
+    ssl_certificate ./ktb.localhost.crt;
+    ssl_certificate_key ./ktb.localhost.key;
+
+    # Disable checking client request body size. This is necessary for local
+    # file uploads in development.
+    client_max_body_size 0;
+
+    # Disable proxy buffering for maximum development speed. 🏎️
+    proxy_request_buffering off;
+    # This also ensures that SSE works.
+    proxy_buffering off;
+
+    # Support websockets for HMR.
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    # Catch-all http redirect to https.
+    server {
+        server_name _;
+        listen 80 default_server;
+        return 301 https://$host$request_uri;
+    }
+
+    # Catch-all https redirect to ktb.localhost.
+    server {
+        listen 443 ssl default_server;
+        return 301 https://ktb.localhost;
+    }
+
+    upstream ktb.localhost {
+        server localhost:4321 fail_timeout=0;
+    }
+    server {
+        server_name ktb.localhost;
+        listen 443 ssl;
+        location / {
+            proxy_pass http://ktb.localhost;
+        }
+    }
+
+    upstream cmd.ktb.localhost {
+        server localhost:5173 fail_timeout=0;
+    }
+    server {
+        server_name cmd.ktb.localhost;
+        listen 443 ssl;
+        location / {
+            proxy_pass http://cmd.ktb.localhost;
+        }
+    }
+}

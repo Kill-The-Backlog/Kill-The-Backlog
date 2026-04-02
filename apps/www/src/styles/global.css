@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
+
+  /* Colors - matched to the product palette */
+  --color-bg: oklch(1 0 0);
+  --color-bg-subtle: oklch(0.985 0.002 264);
+  --color-text: oklch(0.145 0.005 286);
+  --color-text-muted: oklch(0.45 0.012 257);
+  --color-text-subtle: oklch(0.6 0.01 257);
+  --color-accent: oklch(0.541 0.19 293);
+  --color-accent-hover: oklch(0.48 0.19 293);
+  --color-border: oklch(0.915 0.004 264);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent);
+  color: white;
+}

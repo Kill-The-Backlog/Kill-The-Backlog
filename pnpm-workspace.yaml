@@ -1,0 +1,15 @@
+packages:
+  - packages/*
+  - apps/*
+
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - '@tailwindcss/oxide'
+  - core-js
+  - esbuild
+  - fsevents
+  - msgpackr-extract
+  - msw
+  - prisma
+  - protobufjs
+  - sharp

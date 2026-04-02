@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+---
+
+# Code Style & Cleanliness
+
+## Component props types
+
+- Default to inlining props on the function component parameter (for example `function Foo({ id, label }: { id: string; label: string })`) instead of a separate `type FooProps` at module scope.
+- Introduce a named props type only when it is reused (for example a wrapper and its child, documented public API, or Storybook args).
+
+## Exports and Naming
+
+- Prefer named exports over default exports. Only use default exports if required.
+- Keep acronyms (AI, URL, HTML, API, etc.) fully uppercased in variable, function, and component names. Use `formatJSON`, `handleHTTPError`, `SSOMethods`.
+
+## Extract Functions for Readability
+
+- When a callback or inner function exceeds ~15-20 lines, extract it into a named function
+- Name extracted functions clearly to describe what they do (e.g., `buildFilterClauses`, `normalizeAttachments`)
+- This makes the main function read like a high-level recipe
+
+## Keep Functions Focused
+
+- Each function should do one thing well
+- If you find yourself writing comments to separate "sections" within a function, consider extracting those sections into helper functions
+- Small helper functions (even 5-10 lines) are fine if they improve clarity
+
+## Inline One-Use Variables When Clear
+
+- If a variable is only used once and the expression is clear, consider inlining it
+- Exception: keep variables when they add meaningful names to complex expressions
+
+## Group Related Operations
+
+- Keep related assignments together (e.g., extracting multiple values from the same source)
+- Use whitespace to separate logical sections within functions
+
+## Preserve Existing Comments
+
+- NEVER delete or remove existing comments when editing code. Always carry them over exactly as-is unless the comment becomes factually incorrect due to the change.
+- This applies to all comments: inline, block, doc comments, and explanatory notes — regardless of whether they seem "obvious" or "redundant."
+- If unsure whether a comment is still relevant, keep it.
+
+## Avoid Redundant Comments
+
+- Don't add NEW comments that just restate what the code does
+- Let types, function names, and invariants document intent
+- New comments should explain "why", not "what"
+
+## Accessibility
+
+Do not add `aria-*` attributes unless explicitly requested by the user.
+
+## No Unused Features
+
+**NEVER add features, props, parameters, or functionality that are not explicitly requested or immediately used.**
+
+- Don't add optional callback props "just in case" they might be useful later
+- Don't add configuration options that aren't needed for the current task
+- Don't add abstraction layers, utility functions, or comments for things that aren't being used
+
+**Only implement what is explicitly requested. Nothing more.** If you think something might be useful in the future, suggest it to the user instead of implementing it.

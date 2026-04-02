@@ -1,0 +1,68 @@
+---
+alwaysApply: true
+---
+
+# Database
+
+## Prisma
+
+- Always run Prisma from the workspace root using `pnpm prisma`.
+- Do not use `npx prisma` or run Prisma commands from subdirectories.
+- Prisma is used exclusively for migrations; do not use Prisma Client at runtime.
+
+## After making schema changes
+
+Create a migration and generate types:
+
+```bash
+devbox run pnpm prisma migrate dev --name <your-migration-name>
+```
+
+Then build the db package:
+
+```bash
+devbox run turbo build --filter=@ktb/db
+```
+
+## Kysely
+
+- Use Kysely for all runtime/application database queries.
+- Prefer the type-safe DSL (e.g., `selectFrom`, `insertInto`, `updateTable`/`update`, `deleteFrom`, `innerJoin`, `where`, `returning`).
+- Do not use the raw helper `sql\`...\``; prefer DSL constructs for safety and portability.
+- If raw SQL is truly unavoidable (e.g., database-specific features), isolate it, parameterize it, and add a brief justification comment.
+
+## Query patterns
+
+- **Simple queries:** inline directly at the call site. A simple query is a single `selectFrom`, `deleteFrom`, `updateTable`, or `insertInto` with no `onConflict` or other complex logic. Kysely's DSL is self-documenting — wrapping these in a function adds indirection without clarity.
+- **Complex or reused queries:** extract into `query`-prefixed functions (e.g., `queryUpsertUser`). A query is worth extracting when it has `onConflict` logic, is called from multiple places, or involves non-trivial transformations.
+- **Default:** keep queries in the same file that calls them — not in a separate file.
+- **Exception:** core or sufficiently complex queries that are reused across multiple files may live in a shared query file. Use this sparingly.
+- For co-located queries, duplication across files is acceptable. Each file owns its queries independently. Kysely's type safety ensures schema changes surface as compile errors everywhere.
+- Each query (inline or extracted) should select/update only the columns its caller needs.
+
+## Deriving types from DB data
+
+When defining a type that represents a subset of columns from a database table, derive it using `Pick<Selectable<Table>, ...>` instead of manually redeclaring the fields. This keeps types in sync with the schema and avoids drift.
+
+```typescript
+// ❌ BAD — manually duplicating DB column types
+type GoogleAccountData = {
+  googleId: string;
+  oauthAccessToken: string;
+  oauthRefreshToken: string;
+  oauthExpiry: bigint;
+};
+
+// ✅ GOOD — derived from the DB table type
+import type { Selectable } from "@ktb/db/kysely-types";
+import type { GoogleAccount } from "@ktb/db/types";
+
+type GoogleAccountData = Pick<
+  Selectable<GoogleAccount>,
+  "googleId" | "oauthAccessToken" | "oauthRefreshToken" | "oauthExpiry"
+>;
+```
+
+- `Selectable` is re-exported from `@ktb/db/kysely-types`.
+- Table types (e.g. `User`, `GoogleAccount`) are exported from `@ktb/db/types`.
+- Combine with `Omit`, intersection (`&`), or other utility types as needed for composite types.

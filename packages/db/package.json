@@ -1,0 +1,53 @@
+{
+  "name": "@ktb/db",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": {
+      "types": "./src/client.ts",
+      "default": "./build/client.js"
+    },
+    "./types": {
+      "types": "./src/generated/types.ts",
+      "default": "./build/generated/types.js"
+    },
+    "./json-types": {
+      "types": "./src/json-types.ts",
+      "default": "./build/json-types.js"
+    },
+    "./kysely-types": {
+      "types": "./src/kysely-types.ts",
+      "default": "./build/kysely-types.js"
+    }
+  },
+  "files": [
+    "build",
+    "schema.prisma",
+    "migrations",
+    "*.config.ts"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
+  },
+  "dependencies": {
+    "@ktb/shared": "workspace:*",
+    "kysely": "^0.28.15",
+    "pg": "^8.20.0",
+    "prisma": "^7.6.0",
+    "prisma-cli": "^1.0.9",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@ktb/eslint-configs": "workspace:*",
+    "@ktb/ts-configs": "workspace:*",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "eslint": "^10.1.0",
+    "prisma-kysely": "^3.1.0",
+    "typescript": "^6.0.2"
+  }
+}

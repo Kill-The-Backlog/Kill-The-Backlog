@@ -1,0 +1,39 @@
+{
+  "name": "@ktb/eslint-configs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": {
+      "types": "./src/base.ts",
+      "default": "./build/base.js"
+    },
+    "./typescript": {
+      "types": "./src/typescript.ts",
+      "default": "./build/typescript.js"
+    },
+    "./react": {
+      "types": "./src/react.ts",
+      "default": "./build/react.js"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-perfectionist": "^5.8.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "typescript-eslint": "^8.58.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@ktb/ts-configs": "workspace:*",
+    "eslint": "^10.1.0",
+    "typescript": "^6.0.2"
+  }
+}

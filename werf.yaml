@@ -1,0 +1,9 @@
+project: ktb
+configVersion: 1
+build:
+  platform:
+    - linux/amd64
+---
+image: main
+dockerfile: Dockerfile
+target: main

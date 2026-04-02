@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+# Environment Variables Usage
+
+Do not access `process.env` directly in application code; import from the env var helpers instead.
+
+## Frontend Environment Variables Usage
+
+Server-only code must read environment variables from [apps/main/app/lib/.server/server-env-vars.ts](mdc:apps/main/app/lib/.server/server-env-vars.ts).

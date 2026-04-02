@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+---
+
+# Development Workflow
+
+## Development cycle
+
+Before writing any code, come up with an extremely good plan, review it, then PAUSE and ask the user for permission to execute it. Never try to start a dev server or curl a local endpoint.
+
+## Moving files
+
+When moving or renaming files, use `mv` in the shell instead of reading + writing + deleting. This is faster and preserves git history.
+
+## Devbox
+
+This project uses Devbox for environment management. All commands (npm, pnpm, node, database commands, etc.) must be prefixed with `devbox run`.
+
+Examples:
+
+- `devbox run pnpm install`
+- `devbox run pnpm prisma migrate dev`
+- `devbox run node script.js`
+
+## ESLint autofix
+
+From the repo root, run `lint:fix` for a workspace package with `pnpm --filter` (for example `@ktb/main`, `@ktb/db`, `@ktb/shared`):
+
+- **Specific files** (paths relative to that package):  
+  `devbox run pnpm --filter @ktb/main run lint:fix -- app/routes/_signed_in/_nav/_route.tsx`
+- **Whole package:** `devbox run pnpm --filter @ktb/main run lint:fix`
+
+## Current dev status
+
+Current status: `in development`
+
+The application is in early development with no users or deployment. Breaking changes and data migrations are not a concern.

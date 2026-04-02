@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "app.fullname" . }}-wildcard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "app.fullname" . }}-wildcard-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.clusterIssuerName }}
+  dnsNames:
+    - {{ .Values.baseDomain }}
+    - "*.{{ .Values.baseDomain }}"

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": [
+    "nodejs-slim@22",
+    "postgresql_18@18",
+    "valkey@8",
+    "nginx@latest",
+    "mkcert@latest",
+    "awscli2@latest"
+  ],
+  "env_from": ".env"
+}

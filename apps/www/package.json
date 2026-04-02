@@ -1,0 +1,16 @@
+{
+  "name": "@ktb/www",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "dev": "astro dev",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "astro": "^6.1.3",
+    "tailwindcss": "^4.2.2"
+  }
+}

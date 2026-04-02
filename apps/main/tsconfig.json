@@ -1,0 +1,26 @@
+{
+  "extends": "@ktb/ts-configs/remix",
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "server/**/*.ts",
+    ".react-router/**/*.ts",
+
+    // Typescript doesn't include dot directories by default.
+    "app/**/.server/**/*.ts",
+    "app/**/.server/**/*.tsx",
+    "app/**/.client/**/*.ts",
+    "app/**/.client/**/*.tsx"
+  ],
+  "compilerOptions": {
+    "paths": {
+      "#*": ["./app/*"]
+    },
+    "lib": ["es2024", "dom"],
+    "rootDirs": [".", "./.react-router/types"],
+    "exactOptionalPropertyTypes": false,
+    "target": "es2021",
+    "types": ["@react-router/node", "vite/client", "vite-plugin-svgr/client"],
+    "verbatimModuleSyntax": true
+  }
+}

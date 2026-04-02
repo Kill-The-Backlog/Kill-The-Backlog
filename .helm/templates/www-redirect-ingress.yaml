@@ -1,0 +1,30 @@
+{{- $ctx := merge (dict) . (dict "component" "www-redirect") -}}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "app.fullname" . }}-www-redirect
+  labels:
+    {{- include "app.labels" $ctx | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/server-snippet: |
+      {{- include "app.securityServerSnippet" . | nindent 6 }}
+      return 301 https://{{ .Values.baseDomain }}$request_uri;
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - www.{{ .Values.baseDomain }}
+      secretName: {{ include "app.fullname" . }}-wildcard-tls
+  rules:
+    - host: www.{{ .Values.baseDomain }}
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                # This won't be reached due to the redirect, but K8s requires a backend
+                name: {{ include "app.fullname" . }}-www-external
+                port:
+                  number: 443

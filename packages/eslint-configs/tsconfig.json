@@ -1,0 +1,8 @@
+{
+  "extends": "@ktb/ts-configs/node",
+  "compilerOptions": {
+    "outDir": "build",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}

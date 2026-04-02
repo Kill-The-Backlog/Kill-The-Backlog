@@ -1,0 +1,18 @@
+# Dependencies
+node_modules
+
+# Build outputs & caches
+.astro
+.react-router
+.turbo
+build
+dist
+
+# Local tooling & config
+.cursor
+.devbox
+.DS_Store
+.git
+.helm
+.vscode
+devbox.d

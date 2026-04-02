@@ -1,0 +1,6 @@
+{
+  "extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/remix/tsconfig"],
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
+}

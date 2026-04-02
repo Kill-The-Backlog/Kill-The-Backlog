@@ -1,0 +1,17 @@
+{
+  "name": "@ktb/ts-configs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./node": "./src/node.tsconfig.json",
+    "./remix": "./src/remix.tsconfig.json"
+  },
+  "files": [
+    "src"
+  ],
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.5",
+    "@tsconfig/remix": "^2.0.7",
+    "@tsconfig/strictest": "^2.0.8"
+  }
+}

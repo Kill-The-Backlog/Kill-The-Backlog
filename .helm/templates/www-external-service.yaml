@@ -1,0 +1,11 @@
+{{- $ctx := merge (dict) . (dict "component" "www") -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app.fullname" . }}-www-external
+  labels:
+    {{- include "app.labels" $ctx | nindent 4 }}
+spec:
+  type: ExternalName
+  externalName: {{ .Values.wwwBucketHostname }}

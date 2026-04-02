@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+---
+
+# Invariant Assertions
+
+Use `tiny-invariant` to assert values that are **expected** to exist based on application logic. Missing values should crash loudly rather than fail silently.
+
+## When to use `invariant`
+
+- A value should always exist based on the application's control flow (route params, required API fields, refs to always-rendered elements)
+- Missing values indicate a programming error, not a user error
+
+## When NOT to use `invariant`
+
+- React refs to **conditionally rendered** elements (use early return instead)
+- User input validation (use Zod / proper error handling)
+- External API responses (handle gracefully)
+- Optional values that are genuinely optional
+
+## Example
+
+```typescript
+import invariant from "tiny-invariant";
+
+// ✅ Route param that must exist
+const userId = params["userId"];
+invariant(userId, "User ID is required");
+
+// ❌ User input — use validation, not invariant
+invariant(formData.email, "Email is required");
+```

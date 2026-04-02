@@ -1,0 +1,18 @@
+fullnameOverride: ktb
+
+# This resource is global to the cluster and must be created ahead of time.
+clusterIssuerName: ktb-letsencrypt-issuer
+
+baseDomain: example.com
+
+wwwBucketHostname: example.cdn.com
+
+mainEnvVars:
+  DB_SSL_NO_VERIFY: "true"
+  DB_URL:
+  GOOGLE_OAUTH_CLIENT_ID:
+  GOOGLE_OAUTH_CLIENT_SECRET:
+  GOOGLE_OAUTH_REDIRECT_URI:
+  MAIN_ORIGIN:
+  REDIS_URL:
+  SESSION_SECRET:

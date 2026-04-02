@@ -1,0 +1,45 @@
+{{- $ctx := merge (dict) . (dict "component" "main") -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}-main
+  labels:
+    {{- include "app.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "app.labels" $ctx | nindent 8 }}
+    spec:
+      containers:
+        - name: main
+          image: {{ $.Values.werf.image.main }}
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+          envFrom:
+            - secretRef:
+                name: {{ include "app.fullname" . }}-main-env-vars
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http

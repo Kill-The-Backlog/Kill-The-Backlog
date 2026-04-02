@@ -1,0 +1,7 @@
+{
+  "extends": "@ktb/ts-configs/node",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["*.config.ts"]
+}

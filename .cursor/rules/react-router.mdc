@@ -1,0 +1,41 @@
+---
+alwaysApply: true
+---
+
+# React Router Conventions
+
+## Error Responses in Loaders and Actions
+
+Use `throw data(...)` from `react-router` for error responses — not `throw new Response(...)`.
+
+```typescript
+import { data } from "react-router";
+
+// Good
+throw data({ error: "Forbidden" }, { status: 403 });
+
+// Bad
+throw new Response("Forbidden", { status: 403 });
+```
+
+Use `throw` (not `return`) for guards and early exits so execution stops immediately.
+
+## Parsing Request JSON in Actions
+
+Use Zod to validate `request.json()` payloads. Define a `requestSchema` at module level and parse in the action body:
+
+```typescript
+import { z } from "zod";
+
+const requestSchema = z.object({
+  threadId: z.string().min(1),
+});
+
+export const action = async ({ request }: Route.ActionArgs) => {
+  const body: unknown = await request.json();
+  const { threadId } = requestSchema.parse(body);
+  // ...
+};
+```
+
+Do not use `as` casts on `request.json()` — type the variable as `unknown` and validate with Zod.

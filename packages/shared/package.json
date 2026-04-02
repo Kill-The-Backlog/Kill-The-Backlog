@@ -1,0 +1,31 @@
+{
+  "name": "@ktb/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./env-vars": {
+      "types": "./src/env-vars.ts",
+      "default": "./build/env-vars.js"
+    }
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@ktb/eslint-configs": "workspace:*",
+    "@ktb/ts-configs": "workspace:*",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "typescript": "^6.0.2"
+  }
+}
