@@ -40,12 +40,12 @@ export default async function handleRequest(
 const isDev = process.env["NODE_ENV"] === "development";
 
 function buildCspHeader(nonce: string) {
-  // ws://localhost:* needed for react-router-devtools WebSocket
   const connectSrc = isDev
-    ? "connect-src 'self' ws://localhost:*"
+    ? // `ws://localhost:*` required for HMR websocket
+      "connect-src 'self' ws://localhost:*"
     : "connect-src 'self'";
 
-  // blob: needed for vite-created web workers
+  // `blob:` needed for vite-created web workers
   const workerSrc = isDev ? "worker-src 'self' blob:" : "worker-src 'self'";
 
   return [

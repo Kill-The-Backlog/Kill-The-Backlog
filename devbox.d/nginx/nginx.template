@@ -19,29 +19,29 @@ http {
     # file uploads in development.
     client_max_body_size 0;
 
-    # Disable proxy buffering for maximum development speed. 🏎️
+    # Disable proxy buffering for maximum development speed 🏎️
     proxy_request_buffering off;
     # This also ensures that SSE works.
     proxy_buffering off;
 
-    # Support websockets for HMR.
+    # Support websockets for HMR
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
-    # Catch-all http redirect to https.
+    # Catch-all http redirect to https
     server {
         server_name _;
         listen 80 default_server;
         return 301 https://$host$request_uri;
     }
 
-    # Catch-all https redirect to ktb.localhost.
+    # Catch-all https redirect to ktb.localhost
     server {
         listen 443 ssl default_server;
         return 301 https://ktb.localhost;
     }
 
-    # Marketing website.
+    # Marketing website
     upstream www.ktb.localhost {
         server localhost:4321 fail_timeout=0;
     }
@@ -53,7 +53,7 @@ http {
         }
     }
 
-    # Product.
+    # Product
     upstream ktb.localhost {
         server localhost:5173 fail_timeout=0;
     }

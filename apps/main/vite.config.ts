@@ -6,6 +6,12 @@ import { envOnlyMacros } from "vite-env-only";
 import svgr from "vite-plugin-svgr";
 
 export default defineConfig(({ isSsrBuild }) => ({
+  server: {
+    hmr: {
+      host: "localhost",
+      protocol: "ws",
+    },
+  },
   ...(isSsrBuild
     ? {
         build: {
