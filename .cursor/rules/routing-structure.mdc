@@ -1,0 +1,23 @@
+---
+description: Route file structure conventions for remix-flat-routes
+globs: apps/main/app/routes/**
+alwaysApply: false
+---
+
+# Route File Structure
+
+This project uses `remix-flat-routes` for file-based routing.
+
+## Nested route segments
+
+Use **directory nesting** (not dot notation) for multi-segment route paths:
+
+```
+# ✅ GOOD — directory nesting
+repos/$repoId/cards/$cardId/_route.tsx
+
+# ❌ BAD — dot notation for segments
+repos/$repoId/cards.$cardId/_route.tsx
+```
+
+Both produce the same URL (`/repos/:repoId/cards/:cardId`), but directory nesting is the project convention.

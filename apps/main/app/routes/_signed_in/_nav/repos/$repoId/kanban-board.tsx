@@ -14,6 +14,7 @@ import { PlusIcon } from "@phosphor-icons/react";
 import { useQuery, useZero } from "@rocicorp/zero/react";
 import { generateKeyBetween } from "fractional-indexing";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams } from "react-router";
 import invariant from "tiny-invariant";
 
 import { Button } from "#components/ui/button.js";
@@ -21,9 +22,9 @@ import { cn } from "#lib/utils.js";
 import { mutators } from "#zero/mutators.js";
 import { queries } from "#zero/queries.js";
 
-type CardDragData = { cardId: string; columnId: string; type: "card" };
+export type ColumnDef = { id: string; title: string };
 
-type ColumnDef = { id: string; title: string };
+type CardDragData = { cardId: string; columnId: string; type: "card" };
 
 type KanbanCardRow = {
   columnId: string;
@@ -32,13 +33,17 @@ type KanbanCardRow = {
   title: string;
 };
 
-const COLUMNS: ColumnDef[] = [
+export const COLUMNS: ColumnDef[] = [
   { id: "backlog", title: "Backlog" },
   { id: "in-progress", title: "In Progress" },
   { id: "done", title: "Done" },
 ];
 
-export function KanbanBoard({ repoId }: { repoId: number }) {
+export function KanbanBoard() {
+  const params = useParams();
+  const repoId = Number(params["repoId"]);
+  invariant(!Number.isNaN(repoId), "repoId must be a number");
+
   const zero = useZero();
   const [cards] = useQuery(queries.kanbanCards.byRepo({ repoId }));
 
@@ -204,6 +209,7 @@ const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
+  const { repoId } = useParams();
 
   useEffect(() => {
     const el = ref.current;
@@ -263,14 +269,16 @@ const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
       ref={ref}
     >
       {closestEdge === "top" && <DropEdgeIndicator edge="top" />}
-      <div
+      <Link
         className={cn(
-          "bg-card border-border rounded-md border px-3 py-2 text-xs wrap-break-word shadow-xs",
+          "bg-card border-border block rounded-md border px-3 py-2 text-xs wrap-break-word shadow-xs",
           isDragging && "opacity-50",
         )}
+        draggable={false}
+        to={`/repos/${repoId}/cards/${card.id}`}
       >
         {card.title}
-      </div>
+      </Link>
       {closestEdge === "bottom" && <DropEdgeIndicator edge="bottom" />}
     </div>
   );

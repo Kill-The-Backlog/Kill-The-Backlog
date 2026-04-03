@@ -1,5 +1,5 @@
 import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { data, Link } from "react-router";
+import { data, Link, Outlet } from "react-router";
 import invariant from "tiny-invariant";
 
 import { Button } from "#components/ui/button.js";
@@ -45,8 +45,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           {repo.fullName}
         </h1>
       </div>
-      <div className="min-h-0 flex-1">
-        <KanbanBoard repoId={repo.id} />
+      <div className="flex min-h-0 flex-1">
+        <div className="min-w-0 flex-1">
+          <KanbanBoard />
+        </div>
+        <Outlet />
       </div>
     </div>
   );
