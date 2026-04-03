@@ -53,7 +53,7 @@ http {
         }
     }
 
-    # Product
+    # App
     upstream ktb.localhost {
         server localhost:5173 fail_timeout=0;
     }
@@ -62,6 +62,18 @@ http {
         listen 443 ssl;
         location / {
             proxy_pass http://ktb.localhost;
+        }
+    }
+
+    # Zero
+    upstream zero.ktb.localhost {
+        server localhost:4848 fail_timeout=0;
+    }
+    server {
+        server_name zero.ktb.localhost;
+        listen 443 ssl;
+        location / {
+            proxy_pass http://zero.ktb.localhost;
         }
     }
 }

@@ -25,6 +25,7 @@ import { useNonce } from "#hooks/use-nonce.js";
 import { getUser } from "#lib/.server/auth/auth-context.js";
 import { sessionMiddleware } from "#lib/.server/auth/session.js";
 import { noCacheMiddleware } from "#lib/.server/cache/no-cache-middleware.js";
+import { clientEnv } from "#lib/.server/env/client.js";
 
 import type { Route } from "./+types/root";
 
@@ -55,12 +56,13 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
   const result = await getUser(context);
 
   if (!result) {
-    return { user: null };
+    return { env: clientEnv, user: null };
   }
 
   const { user } = result;
 
   return {
+    env: clientEnv,
     user: {
       avatarUrl: user.avatarUrl,
       displayName: user.displayName,

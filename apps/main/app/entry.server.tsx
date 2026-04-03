@@ -8,6 +8,7 @@ import { renderToPipeableStream } from "react-dom/server";
 import { ServerRouter } from "react-router";
 
 import { NonceProvider } from "#hooks/use-nonce.js";
+import { clientEnv } from "#lib/.server/env/client.js";
 
 export const streamTimeout = 30_000; // Bumped from 5s to 30s.
 
@@ -39,11 +40,13 @@ export default async function handleRequest(
 
 const isDev = process.env["NODE_ENV"] === "development";
 
+const zeroWsURL = clientEnv.ZERO_CACHE_URL.replace(/^http/, "ws");
+
 function buildCspHeader(nonce: string) {
   const connectSrc = isDev
     ? // `ws://localhost:*` required for HMR websocket
-      "connect-src 'self' ws://localhost:*"
-    : "connect-src 'self'";
+      `connect-src 'self' ${zeroWsURL} ws://localhost:*`
+    : `connect-src 'self' ${zeroWsURL}`;
 
   // `blob:` needed for vite-created web workers
   const workerSrc = isDev ? "worker-src 'self' blob:" : "worker-src 'self'";

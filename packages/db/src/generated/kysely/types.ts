@@ -29,6 +29,16 @@ export type GitHubRepo = {
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
+export type KanbanCard = {
+  id: string;
+  repoId: number;
+  userId: number;
+  title: string;
+  columnId: string;
+  sortOrder: string;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
 export type User = {
   id: Generated<number>;
   email: string;
@@ -41,5 +51,6 @@ export type User = {
 export type DB = {
   GitHubAccount: GitHubAccount;
   GitHubRepo: GitHubRepo;
+  KanbanCard: KanbanCard;
   User: User;
 };

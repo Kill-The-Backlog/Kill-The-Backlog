@@ -8,8 +8,12 @@
       "default": "./build/client.js"
     },
     "./types": {
-      "types": "./src/generated/types.ts",
-      "default": "./build/generated/types.js"
+      "types": "./src/generated/kysely/types.ts",
+      "default": "./build/generated/kysely/types.js"
+    },
+    "./zero": {
+      "types": "./src/generated/zero/schema.ts",
+      "default": "./build/generated/zero/schema.js"
     },
     "./json-types": {
       "types": "./src/json-types.ts",
@@ -35,6 +39,7 @@
   },
   "dependencies": {
     "@ktb/shared": "workspace:*",
+    "@rocicorp/zero": "^1.0.0",
     "kysely": "^0.28.15",
     "pg": "^8.20.0",
     "prisma": "^7.6.0",
@@ -48,6 +53,7 @@
     "@types/pg": "^8.20.0",
     "eslint": "^10.1.0",
     "prisma-kysely": "^3.1.0",
+    "prisma-zero": "^0.1.3",
     "typescript": "^6.0.2"
   }
 }

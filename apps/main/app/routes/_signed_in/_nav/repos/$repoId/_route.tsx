@@ -2,12 +2,13 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { data, Link } from "react-router";
 import invariant from "tiny-invariant";
 
-import { KanbanBoard } from "#components/kanban-board.js";
 import { Button } from "#components/ui/button.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 
 import type { Route } from "./+types/_route";
+
+import { KanbanBoard } from "./kanban-board";
 
 export const loader = async ({ context, params }: Route.LoaderArgs) => {
   const { user } = await requireUser(context);
@@ -45,7 +46,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         </h1>
       </div>
       <div className="min-h-0 flex-1">
-        <KanbanBoard />
+        <KanbanBoard repoId={repo.id} />
       </div>
     </div>
   );

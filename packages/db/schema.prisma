@@ -1,8 +1,13 @@
 generator client {
   provider = "prisma-kysely"
 
-  output   = "./src/generated"
-  fileName = "types.ts"
+  output = "./src/generated/kysely"
+}
+
+generator zero {
+  provider = "prisma-zero"
+
+  output = "./src/generated/zero"
 }
 
 datasource db {
@@ -17,6 +22,7 @@ model User {
   isStaff       Boolean        @default(false)
   githubAccount GitHubAccount?
   githubRepos   GitHubRepo[]
+  kanbanCards   KanbanCard[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -33,9 +39,9 @@ model GitHubAccount {
 }
 
 model GitHubRepo {
-  id             Int      @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   userId         Int
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   githubRepoId   Int
   name           String
   fullName       String
@@ -45,8 +51,22 @@ model GitHubRepo {
   htmlUrl        String
   isPrivate      Boolean
   defaultBranch  String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  kanbanCards    KanbanCard[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@unique([userId, githubRepoId])
+}
+
+model KanbanCard {
+  id        String     @id @db.Uuid
+  repoId    Int
+  repo      GitHubRepo @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  columnId  String
+  sortOrder String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }

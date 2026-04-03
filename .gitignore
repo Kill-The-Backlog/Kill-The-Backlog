@@ -4,6 +4,9 @@
 .react-router
 .turbo
 
+zero.db
+zero.db-*
+
 build
 node_modules
 tmp

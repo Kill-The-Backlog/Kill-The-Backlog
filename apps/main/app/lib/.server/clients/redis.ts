@@ -1,5 +1,5 @@
 import Redis from "ioredis";
 
-import { serverEnvVars } from "#lib/.server/server-env-vars.js";
+import { serverEnv } from "#lib/.server/env/server.js";
 
-export const redis = new Redis(serverEnvVars.REDIS_URL);
+export const redis = new Redis(serverEnv.REDIS_URL);

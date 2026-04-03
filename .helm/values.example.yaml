@@ -8,7 +8,6 @@ baseDomain: example.com
 wwwBucketHostname: example.cdn.com
 
 mainEnvVars:
-  DB_SSL_NO_VERIFY: "true"
   DB_URL:
   GITHUB_OAUTH_CLIENT_ID:
   GITHUB_OAUTH_CLIENT_SECRET:

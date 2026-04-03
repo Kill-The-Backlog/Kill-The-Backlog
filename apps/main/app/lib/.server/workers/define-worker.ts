@@ -5,7 +5,7 @@ import { Queue as BullQueue, Worker as BullWorker } from "bullmq";
 import { makeRedisClient } from "./redis.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyWorker = Worker<any, any, any>;
+export type AnyWorker = Worker<any, any>;
 
 export type EnqueueOptions = Omit<JobsOptions, "jobId"> & {
   /**

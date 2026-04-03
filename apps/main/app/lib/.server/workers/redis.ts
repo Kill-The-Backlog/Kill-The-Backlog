@@ -1,9 +1,9 @@
 import Redis from "ioredis";
 
-import { serverEnvVars } from "#lib/.server/server-env-vars.js";
+import { serverEnv } from "#lib/.server/env/server.js";
 
 export const makeRedisClient = () =>
-  new Redis(serverEnvVars.REDIS_URL, {
+  new Redis(serverEnv.REDIS_URL, {
     // Required by bullmq.
     maxRetriesPerRequest: null,
   });

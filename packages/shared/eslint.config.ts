@@ -5,7 +5,7 @@ export default [
   ...baseConfig,
   ...typescriptConfig({
     project: ["tsconfig.json", "tsconfig.node.json"],
-    tsconfigRootDir: ".",
+    tsconfigRootDir: import.meta.dirname,
   }),
   {
     ignores: ["src/generated"],

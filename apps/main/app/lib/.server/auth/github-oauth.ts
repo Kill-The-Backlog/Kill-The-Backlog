@@ -3,7 +3,7 @@ import { exchangeWebFlowCode } from "@octokit/oauth-methods";
 import { Octokit } from "@octokit/rest";
 import invariant from "tiny-invariant";
 
-import { serverEnvVars } from "#lib/.server/server-env-vars.js";
+import { serverEnv } from "#lib/.server/env/server.js";
 
 const SCOPES = ["read:user", "user:email", "repo"];
 
@@ -19,11 +19,11 @@ export async function exchangeCodeForAccessToken(
   code: string,
 ): Promise<string> {
   const { authentication } = await exchangeWebFlowCode({
-    clientId: serverEnvVars.GITHUB_OAUTH_CLIENT_ID,
-    clientSecret: serverEnvVars.GITHUB_OAUTH_CLIENT_SECRET,
+    clientId: serverEnv.GITHUB_OAUTH_CLIENT_ID,
+    clientSecret: serverEnv.GITHUB_OAUTH_CLIENT_SECRET,
     clientType: "oauth-app",
     code,
-    redirectUrl: serverEnvVars.GITHUB_OAUTH_REDIRECT_URI,
+    redirectUrl: serverEnv.GITHUB_OAUTH_REDIRECT_URI,
   });
 
   return authentication.token;
@@ -56,8 +56,8 @@ export async function fetchGitHubUserProfile(
 
 export function generateAuthorizationUrl(): { state: string; url: string } {
   const { state, url } = oauthAuthorizationUrl({
-    clientId: serverEnvVars.GITHUB_OAUTH_CLIENT_ID,
-    redirectUrl: serverEnvVars.GITHUB_OAUTH_REDIRECT_URI,
+    clientId: serverEnv.GITHUB_OAUTH_CLIENT_ID,
+    redirectUrl: serverEnv.GITHUB_OAUTH_REDIRECT_URI,
     scopes: SCOPES,
   });
 

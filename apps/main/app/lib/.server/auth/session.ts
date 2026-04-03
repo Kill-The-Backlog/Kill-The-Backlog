@@ -6,7 +6,7 @@ import {
   createCookieSessionStorage,
 } from "react-router";
 
-import { serverEnvVars } from "#lib/.server/server-env-vars.js";
+import { serverEnv } from "#lib/.server/env/server.js";
 
 type SessionData = {
   oauthMode?: "signin";
@@ -16,13 +16,16 @@ type SessionData = {
 
 const COOKIE_NAME = "__session";
 
-const isSecure = serverEnvVars.MAIN_ORIGIN.startsWith("https://");
+const isSecure = serverEnv.MAIN_ORIGIN.startsWith("https://");
+
+const cookieDomain = new URL(serverEnv.MAIN_ORIGIN).hostname;
 
 const sessionCookie = createCookie(COOKIE_NAME, {
+  domain: cookieDomain,
   httpOnly: true,
   maxAge: 60 * 60 * 24 * 14, // 14 days
   sameSite: "lax",
-  secrets: [serverEnvVars.SESSION_SECRET],
+  secrets: [serverEnv.SESSION_SECRET],
   secure: isSecure,
 });
 

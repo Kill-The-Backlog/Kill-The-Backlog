@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./env-vars": {
-      "types": "./src/env-vars.ts",
-      "default": "./build/env-vars.js"
+    "./env": {
+      "types": "./src/env.ts",
+      "default": "./build/env.js"
     }
   },
   "files": [

@@ -4,71 +4,181 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {
   draggable,
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import { PlusIcon } from "@phosphor-icons/react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useQuery, useZero } from "@rocicorp/zero/react";
+import { generateKeyBetween } from "fractional-indexing";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import invariant from "tiny-invariant";
 
 import { Button } from "#components/ui/button.js";
 import { cn } from "#lib/utils.js";
-
-type Card = { id: string; title: string };
+import { mutators } from "#zero/mutators.js";
+import { queries } from "#zero/queries.js";
 
 type CardDragData = { cardId: string; columnId: string; type: "card" };
 
-type CardDropTarget = { cardId: string; closestEdge: Edge | null };
+type ColumnDef = { id: string; title: string };
 
-type ColumnData = { cards: Card[]; id: string; title: string };
+type KanbanCardRow = {
+  columnId: string;
+  id: string;
+  sortOrder: string;
+  title: string;
+};
 
-const DEFAULT_COLUMNS: ColumnData[] = [
-  { cards: [], id: "backlog", title: "Backlog" },
-  { cards: [], id: "in-progress", title: "In Progress" },
-  { cards: [], id: "done", title: "Done" },
+const COLUMNS: ColumnDef[] = [
+  { id: "backlog", title: "Backlog" },
+  { id: "in-progress", title: "In Progress" },
+  { id: "done", title: "Done" },
 ];
 
-export function KanbanBoard() {
-  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+export function KanbanBoard({ repoId }: { repoId: number }) {
+  const zero = useZero();
+  const [cards] = useQuery(queries.kanbanCards.byRepo({ repoId }));
+
+  const columnCards = useMemo(() => {
+    const grouped = new Map<string, KanbanCardRow[]>();
+    for (const col of COLUMNS) {
+      grouped.set(col.id, []);
+    }
+    for (const card of cards) {
+      const list = grouped.get(card.columnId);
+      if (list) list.push(card);
+    }
+    return grouped;
+  }, [cards]);
+
+  const handleCardDrop = useCallback(
+    function handleCardDrop({
+      location,
+      source,
+    }: {
+      location: {
+        current: { dropTargets: { data: Record<string, unknown> }[] };
+      };
+      source: { data: Record<string, unknown> };
+    }) {
+      const dropTargets = location.current.dropTargets;
+      if (dropTargets.length === 0) return;
+
+      const { cardId: sourceCardId, columnId: sourceColumnId } =
+        parseCardDragData(source.data);
+
+      const columnTarget = dropTargets.find((t) => t.data["type"] === "column");
+      if (!columnTarget) return;
+
+      const destColumnId = columnTarget.data["columnId"];
+      invariant(typeof destColumnId === "string");
+
+      const cardTarget = dropTargets.find((t) => t.data["type"] === "card");
+      if (cardTarget?.data["cardId"] === sourceCardId) return;
+
+      const destCards = columnCards.get(destColumnId) ?? [];
+
+      const targetCardId = cardTarget
+        ? (cardTarget.data["cardId"] as string)
+        : undefined;
+      const closestEdge = cardTarget
+        ? extractClosestEdge(cardTarget.data)
+        : null;
+
+      const sortOrder = computeFractionalIndex(
+        destCards.filter((c) => c.id !== sourceCardId),
+        targetCardId,
+        closestEdge,
+      );
+
+      if (sourceColumnId === destColumnId) {
+        zero.mutate(
+          mutators.kanbanCards.reorder({ id: sourceCardId, sortOrder }),
+        );
+      } else {
+        zero.mutate(
+          mutators.kanbanCards.move({
+            columnId: destColumnId,
+            id: sourceCardId,
+            sortOrder,
+          }),
+        );
+      }
+    },
+    [columnCards, zero],
+  );
 
   useEffect(
     () =>
       monitorForElements({
         canMonitor: ({ source }) => source.data["type"] === "card",
-        onDrop({ location, source }) {
-          const dropTargets = location.current.dropTargets;
-          if (dropTargets.length === 0) return;
-          setColumns((prev) => computeCardDrop(prev, source.data, dropTargets));
-        },
+        onDrop: handleCardDrop,
       }),
-    [],
+    [handleCardDrop],
   );
 
-  const addCard = useCallback((columnId: string, title: string) => {
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === columnId
-          ? {
-              ...col,
-              cards: [...col.cards, { id: crypto.randomUUID(), title }],
-            }
-          : col,
-      ),
-    );
-  }, []);
+  const handleAddCard = useCallback(
+    (columnId: string, title: string) => {
+      const colCards = columnCards.get(columnId) ?? [];
+      const lastKey =
+        colCards.length > 0 ? colCards[colCards.length - 1]!.sortOrder : null;
+
+      zero.mutate(
+        mutators.kanbanCards.create({
+          columnId,
+          id: crypto.randomUUID(),
+          repoId,
+          sortOrder: generateKeyBetween(lastKey, null),
+          title,
+        }),
+      );
+    },
+    [columnCards, repoId, zero],
+  );
 
   return (
     <div className="flex h-full gap-3 overflow-x-auto p-4">
-      {columns.map((column) => (
-        <KanbanColumn column={column} key={column.id} onAddCard={addCard} />
+      {COLUMNS.map((col) => (
+        <KanbanColumn
+          cards={columnCards.get(col.id) ?? []}
+          column={col}
+          key={col.id}
+          onAddCard={handleAddCard}
+        />
       ))}
     </div>
   );
+}
+
+function computeFractionalIndex(
+  destCards: KanbanCardRow[],
+  targetCardId: string | undefined,
+  closestEdge: Edge | null,
+): string {
+  if (destCards.length === 0) return generateKeyBetween(null, null);
+
+  if (!targetCardId) {
+    return generateKeyBetween(destCards[destCards.length - 1]!.sortOrder, null);
+  }
+
+  const targetIndex = destCards.findIndex((c) => c.id === targetCardId);
+  if (targetIndex === -1) {
+    return generateKeyBetween(destCards[destCards.length - 1]!.sortOrder, null);
+  }
+
+  if (closestEdge === "top") {
+    const prev = targetIndex > 0 ? destCards[targetIndex - 1]!.sortOrder : null;
+    return generateKeyBetween(prev, destCards[targetIndex]!.sortOrder);
+  }
+
+  const next =
+    targetIndex < destCards.length - 1
+      ? destCards[targetIndex + 1]!.sortOrder
+      : null;
+  return generateKeyBetween(destCards[targetIndex]!.sortOrder, next);
 }
 
 function DropEdgeIndicator({ edge }: { edge: "bottom" | "top" }) {
@@ -90,13 +200,7 @@ function parseCardDragData(data: Record<string, unknown>): CardDragData {
   return { cardId, columnId, type: "card" };
 }
 
-const KanbanCard = memo(function KanbanCard({
-  card,
-  columnId,
-}: {
-  card: Card;
-  columnId: string;
-}) {
+const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
@@ -122,7 +226,7 @@ const KanbanCard = memo(function KanbanCard({
         element: el,
         getInitialData: () => ({
           cardId: card.id,
-          columnId,
+          columnId: card.columnId,
           type: "card",
         }),
         onDragStart: () => {
@@ -137,7 +241,7 @@ const KanbanCard = memo(function KanbanCard({
         element: el,
         getData: ({ element, input }) =>
           attachClosestEdge(
-            { cardId: card.id, columnId, type: "card" },
+            { cardId: card.id, columnId: card.columnId, type: "card" },
             { allowedEdges: ["top", "bottom"], element, input },
           ),
         getIsSticky: () => true,
@@ -151,7 +255,7 @@ const KanbanCard = memo(function KanbanCard({
         },
       }),
     );
-  }, [card.id, columnId]);
+  }, [card.id, card.columnId]);
 
   return (
     <div
@@ -173,10 +277,12 @@ const KanbanCard = memo(function KanbanCard({
 });
 
 const KanbanColumn = memo(function KanbanColumn({
+  cards,
   column,
   onAddCard,
 }: {
-  column: ColumnData;
+  cards: KanbanCardRow[];
+  column: ColumnDef;
   onAddCard: (columnId: string, title: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -223,14 +329,14 @@ const KanbanColumn = memo(function KanbanColumn({
           {column.title}
         </h3>
         <span className="text-muted-foreground text-2xs tabular-nums">
-          {column.cards.length}
+          {cards.length}
         </span>
       </div>
 
       {/* -mt-px pt-px: the top padding prevents overflow-y-auto from clipping the first card's drop indicator */}
       <div className="-mt-px flex min-h-24 flex-1 flex-col overflow-y-auto px-2 pt-px pb-2">
-        {column.cards.map((card) => (
-          <KanbanCard card={card} columnId={column.id} key={card.id} />
+        {cards.map((card) => (
+          <KanbanCard card={card} key={card.id} />
         ))}
       </div>
 
@@ -258,135 +364,3 @@ const KanbanColumn = memo(function KanbanColumn({
     </div>
   );
 });
-
-function computeCardDrop(
-  columns: ColumnData[],
-  sourceData: Record<string, unknown>,
-  dropTargets: { data: Record<string, unknown> }[],
-): ColumnData[] {
-  const { cardId: sourceCardId, columnId: sourceColumnId } =
-    parseCardDragData(sourceData);
-
-  const columnTarget = dropTargets.find((t) => t.data["type"] === "column");
-  if (!columnTarget) return columns;
-
-  const destColumnId = columnTarget.data["columnId"];
-  invariant(typeof destColumnId === "string");
-
-  const cardTarget = dropTargets.find((t) => t.data["type"] === "card");
-  if (cardTarget?.data["cardId"] === sourceCardId) return columns;
-
-  const cardDropTarget: CardDropTarget | null = cardTarget
-    ? {
-        cardId: parseCardDragData(cardTarget.data).cardId,
-        closestEdge: extractClosestEdge(cardTarget.data),
-      }
-    : null;
-
-  if (sourceColumnId === destColumnId) {
-    return reorderWithinColumn(
-      columns,
-      sourceColumnId,
-      sourceCardId,
-      cardDropTarget,
-    );
-  }
-  return moveAcrossColumns(
-    columns,
-    sourceColumnId,
-    sourceCardId,
-    destColumnId,
-    cardDropTarget,
-  );
-}
-
-function findCardPosition(
-  columns: ColumnData[],
-  columnId: string,
-  cardId: string,
-) {
-  const col = columns.find((c) => c.id === columnId);
-  if (!col) return null;
-  const index = col.cards.findIndex((c) => c.id === cardId);
-  if (index === -1) return null;
-  return { col, index };
-}
-
-function moveAcrossColumns(
-  columns: ColumnData[],
-  sourceColumnId: string,
-  sourceCardId: string,
-  destColumnId: string,
-  cardDropTarget: CardDropTarget | null,
-): ColumnData[] {
-  const source = findCardPosition(columns, sourceColumnId, sourceCardId);
-  if (!source) return columns;
-
-  const destCol = columns.find((c) => c.id === destColumnId);
-  if (!destCol) return columns;
-
-  const card = source.col.cards[source.index];
-  invariant(card);
-
-  const newDestCards = Array.from(destCol.cards);
-  if (cardDropTarget) {
-    const indexOfTarget = destCol.cards.findIndex(
-      (c) => c.id === cardDropTarget.cardId,
-    );
-    const insertAt =
-      indexOfTarget === -1
-        ? newDestCards.length
-        : cardDropTarget.closestEdge === "bottom"
-          ? indexOfTarget + 1
-          : indexOfTarget;
-    newDestCards.splice(insertAt, 0, card);
-  } else {
-    newDestCards.push(card);
-  }
-
-  return columns.map((col) => {
-    if (col.id === sourceColumnId) {
-      return { ...col, cards: col.cards.filter((c) => c.id !== sourceCardId) };
-    }
-    if (col.id === destColumnId) {
-      return { ...col, cards: newDestCards };
-    }
-    return col;
-  });
-}
-
-function reorderWithinColumn(
-  columns: ColumnData[],
-  sourceColumnId: string,
-  sourceCardId: string,
-  cardDropTarget: CardDropTarget | null,
-): ColumnData[] {
-  const source = findCardPosition(columns, sourceColumnId, sourceCardId);
-  if (!source) return columns;
-
-  const indexOfTarget = cardDropTarget
-    ? source.col.cards.findIndex((c) => c.id === cardDropTarget.cardId)
-    : source.col.cards.length - 1;
-  if (indexOfTarget === -1) return columns;
-
-  const finishIndex = getReorderDestinationIndex({
-    axis: "vertical",
-    closestEdgeOfTarget: cardDropTarget?.closestEdge ?? null,
-    indexOfTarget,
-    startIndex: source.index,
-  });
-  if (source.index === finishIndex) return columns;
-
-  return columns.map((col) =>
-    col.id === sourceColumnId
-      ? {
-          ...col,
-          cards: reorder({
-            finishIndex,
-            list: col.cards,
-            startIndex: source.index,
-          }),
-        }
-      : col,
-  );
-}

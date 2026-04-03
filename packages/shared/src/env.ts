@@ -4,8 +4,7 @@ export const zBooleanString = z
   .enum(["true", "false"])
   .transform((v) => v === "true");
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const requireEnvVars = <T extends z.ZodObject<any>>(
+export const requireEnv = <T extends z.ZodObject>(
   schema: T,
   env: Record<string, unknown>,
 ): z.infer<T> => {

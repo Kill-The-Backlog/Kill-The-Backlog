@@ -18,6 +18,12 @@ processes:
       valkey:
         condition: process_started
 
+  zero-cache:
+    command: "pnpm apps:main exec zero-cache-dev --query-forward-cookies --mutate-forward-cookies"
+    depends_on:
+      postgresql:
+        condition: process_healthy
+
   #
   # Tools
   #

@@ -1,3 +1,6 @@
 {
-  "extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/node22/tsconfig"]
+  "extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/node22/tsconfig"],
+  "compilerOptions": {
+    "types": ["node"]
+  }
 }

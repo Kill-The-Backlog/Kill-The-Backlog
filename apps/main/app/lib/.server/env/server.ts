@@ -1,7 +1,4 @@
-//
-// These are accessible by loaders and actions.
-//
-import { requireEnvVars } from "@ktb/shared/env-vars";
+import { requireEnv } from "@ktb/shared/env";
 import { z } from "zod";
 
 const schema = z.object({
@@ -14,4 +11,4 @@ const schema = z.object({
   SESSION_SECRET: z.string(),
 });
 
-export const serverEnvVars = requireEnvVars(schema, process.env);
+export const serverEnv = requireEnv(schema, process.env);

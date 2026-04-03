@@ -1,16 +1,24 @@
 import { GithubLogoIcon, SwordIcon } from "@phosphor-icons/react";
 import { Link, Outlet } from "react-router";
+import invariant from "tiny-invariant";
 
 import { Button } from "#components/ui/button.js";
+import { useRootLoaderData } from "#root.js";
+import { ZeroProvider } from "#zero/zero-provider.js";
 
 export default function Route() {
+  const { env, user } = useRootLoaderData();
+  invariant(user, "User is required");
+
   return (
-    <div className="flex h-full flex-col">
-      <Nav />
-      <main className="flex-1 overflow-auto">
-        <Outlet />
-      </main>
-    </div>
+    <ZeroProvider cacheURL={env.ZERO_CACHE_URL} userId={user.id}>
+      <div className="flex h-full flex-col">
+        <Nav />
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
+    </ZeroProvider>
   );
 }
 
@@ -18,11 +26,7 @@ function Nav() {
   return (
     <header className="border-border z-50 flex h-14 items-center gap-1 border-b px-2">
       <NavLogo />
-      <Button
-        asChild
-        className="rounded-md"
-        variant="ghost"
-      >
+      <Button asChild className="rounded-md" variant="ghost">
         <Link to="/repos">
           <GithubLogoIcon className="size-4" />
           <span className="hidden sm:inline">Repos</span>

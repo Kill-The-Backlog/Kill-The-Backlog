@@ -14,7 +14,7 @@ pnpm install
 turbo build
 
 # Setup database.
-initdb -A scram-sha-256 -U ktb --pwfile=<(echo ktb)
+initdb -A scram-sha-256 -U ktb --pwfile=<(echo ktb) --set wal_level=logical
 
 devbox services up postgresql -b
 until pg_isready; do
