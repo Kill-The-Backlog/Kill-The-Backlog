@@ -64,9 +64,12 @@ model KanbanCard {
   repo      GitHubRepo @relation(fields: [repoId], references: [id], onDelete: Cascade)
   userId    Int
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  number    Int
   title     String
   columnId  String
   sortOrder String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+
+  @@unique([repoId, number])
 }

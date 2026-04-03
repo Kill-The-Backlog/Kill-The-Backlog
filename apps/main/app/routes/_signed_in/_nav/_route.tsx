@@ -4,6 +4,8 @@ import { Fragment } from "react";
 import { Link, Outlet, useMatches, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
+import type { BreadcrumbHandle } from "#lib/route-handle.js";
+
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
 import {
   Breadcrumb,
@@ -26,6 +28,10 @@ import { hasBreadcrumbHandle } from "#lib/route-handle.js";
 import { getInitials } from "#lib/utils.js";
 import { useRootLoaderData } from "#root.js";
 import { ZeroProvider } from "#zero/zero-provider.js";
+
+export const handle: BreadcrumbHandle = {
+  breadcrumb: () => ({ label: "Repos", to: "/" }),
+};
 
 export default function Route() {
   const { env, user } = useRootLoaderData();
@@ -87,7 +93,9 @@ function NavBreadcrumbs() {
                       <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink asChild>
-                        <Link to={crumb.to}>{crumb.label}</Link>
+                        <Link draggable={false} to={crumb.to}>
+                          {crumb.label}
+                        </Link>
                       </BreadcrumbLink>
                     )}
                   </BreadcrumbItem>
@@ -122,9 +130,7 @@ function UserMenu() {
               alt={user.displayName}
               src={user.avatarUrl ?? undefined}
             />
-            <AvatarFallback>
-              {getInitials(user.displayName)}
-            </AvatarFallback>
+            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

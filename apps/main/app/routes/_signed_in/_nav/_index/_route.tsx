@@ -118,7 +118,7 @@ function RepoRow({ repo }: { repo: Repo }) {
     <li>
       <Link
         className="flex items-start gap-3 py-3 transition-colors hover:bg-muted/50"
-        to={`/repos/${repo.id}`}
+        to={`/${repo.ownerLogin}/${repo.name}`}
       >
         <Avatar className="mt-0.5" size="sm">
           <AvatarImage

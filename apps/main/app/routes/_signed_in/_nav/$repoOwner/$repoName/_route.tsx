@@ -1,5 +1,5 @@
+import { useMemo } from "react";
 import { data, Outlet } from "react-router";
-import invariant from "tiny-invariant";
 
 import type { BreadcrumbHandle } from "#lib/route-handle.js";
 
@@ -10,23 +10,25 @@ import type { Route } from "./+types/_route";
 
 import { KanbanBoard } from "./kanban-board";
 
+export type RepoOutletContext = { repoId: number };
+
 export const handle: BreadcrumbHandle<Route.ComponentProps["loaderData"]> = {
-  breadcrumb: (loaderData) => ({
-    label: loaderData.repo.fullName,
-    to: `/repos/${loaderData.repo.id}`,
+  breadcrumb: ({ repo }) => ({
+    label: repo.fullName,
+    to: `/${repo.ownerLogin}/${repo.name}`,
   }),
 };
 
 export const loader = async ({ context, params }: Route.LoaderArgs) => {
   const { user } = await requireUser(context);
 
-  const repoId = params.repoId;
-  invariant(repoId, "repoId is required");
+  const { repoName, repoOwner } = params;
 
   const repo = await db
     .selectFrom("GitHubRepo")
-    .select(["id", "fullName"])
-    .where("id", "=", Number(repoId))
+    .select(["id", "fullName", "ownerLogin", "name"])
+    .where("ownerLogin", "=", repoOwner)
+    .where("name", "=", repoName)
     .where("userId", "=", user.id)
     .executeTakeFirst();
 
@@ -37,14 +39,19 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
   return { repo };
 };
 
-export default function Route() {
+export default function Route({ loaderData }: Route.ComponentProps) {
+  const outletContext: RepoOutletContext = useMemo(
+    () => ({ repoId: loaderData.repo.id }),
+    [loaderData.repo.id],
+  );
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1">
-          <KanbanBoard />
+          <KanbanBoard repoId={loaderData.repo.id} />
         </div>
-        <Outlet />
+        <Outlet context={outletContext} />
       </div>
     </div>
   );

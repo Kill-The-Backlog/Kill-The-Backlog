@@ -33,6 +33,7 @@ export type KanbanCard = {
   id: string;
   repoId: number;
   userId: number;
+  number: number;
   title: string;
   columnId: string;
   sortOrder: string;

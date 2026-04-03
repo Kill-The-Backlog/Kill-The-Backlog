@@ -13,10 +13,11 @@ import type {} from "./context.js";
 
 export const queries = defineQueries({
   kanbanCards: {
-    byId: defineQuery(
-      z.object({ cardId: z.string() }),
-      ({ args: { cardId }, ctx }) =>
-        zql.KanbanCard.where("id", cardId)
+    byNumber: defineQuery(
+      z.object({ number: z.number(), repoId: z.number() }),
+      ({ args: { number, repoId }, ctx }) =>
+        zql.KanbanCard.where("repoId", repoId)
+          .where("number", number)
           .whereExists("repo", (q) => q.where("userId", ctx.userId))
           .related("user")
           .one(),

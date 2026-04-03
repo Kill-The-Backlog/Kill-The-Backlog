@@ -43,10 +43,18 @@ export const mutators = defineMutators({
       async ({ args, ctx, tx }) => {
         await requireRepoAccess(tx, args.repoId, ctx.userId);
 
+        const lastCard = await tx.run(
+          zql.KanbanCard.where("repoId", args.repoId)
+            .orderBy("number", "desc")
+            .one(),
+        );
+        const number = (lastCard?.number ?? 0) + 1;
+
         const now = Date.now();
         await tx.mutate.KanbanCard.insert({
           ...args,
           createdAt: now,
+          number,
           updatedAt: now,
           userId: ctx.userId,
         });

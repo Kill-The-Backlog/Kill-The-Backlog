@@ -29,6 +29,7 @@ type CardDragData = { cardId: string; columnId: string; type: "card" };
 type KanbanCardRow = {
   columnId: string;
   id: string;
+  number: number;
   sortOrder: string;
   title: string;
 };
@@ -39,11 +40,7 @@ export const COLUMNS: ColumnDef[] = [
   { id: "done", title: "Done" },
 ];
 
-export function KanbanBoard() {
-  const params = useParams();
-  const repoId = Number(params["repoId"]);
-  invariant(!Number.isNaN(repoId), "repoId must be a number");
-
+export function KanbanBoard({ repoId }: { repoId: number }) {
   const zero = useZero();
   const [cards] = useQuery(queries.kanbanCards.byRepo({ repoId }));
 
@@ -209,7 +206,7 @@ const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
-  const { repoId } = useParams();
+  const { repoName, repoOwner } = useParams();
 
   useEffect(() => {
     const el = ref.current;
@@ -275,7 +272,7 @@ const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
           isDragging && "opacity-50",
         )}
         draggable={false}
-        to={`/repos/${repoId}/cards/${card.id}`}
+        to={`/${repoOwner}/${repoName}/c/${card.number}`}
       >
         {card.title}
       </Link>

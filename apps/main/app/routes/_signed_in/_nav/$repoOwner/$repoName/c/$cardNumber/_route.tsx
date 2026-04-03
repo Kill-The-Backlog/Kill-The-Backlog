@@ -1,7 +1,6 @@
 import { XIcon } from "@phosphor-icons/react";
 import { useQuery } from "@rocicorp/zero/react";
-import { Link, Navigate } from "react-router";
-import invariant from "tiny-invariant";
+import { Link, Navigate, useOutletContext } from "react-router";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
 import { Badge } from "#components/ui/badge.js";
@@ -9,16 +8,19 @@ import { Button } from "#components/ui/button.js";
 import { Skeleton } from "#components/ui/skeleton.js";
 import { queries } from "#zero/queries.js";
 
+import type { RepoOutletContext } from "../../_route";
 import type { Route } from "./+types/_route";
 
 import { COLUMNS } from "../../kanban-board";
 
 export default function Route({ params }: Route.ComponentProps) {
-  const { cardId, repoId } = params;
-  invariant(cardId, "cardId is required");
+  const { cardNumber, repoName, repoOwner } = params;
+  const { repoId } = useOutletContext<RepoOutletContext>();
 
-  const [card, cardResult] = useQuery(queries.kanbanCards.byId({ cardId }));
-  const repoUrl = `/repos/${repoId}`;
+  const [card, cardResult] = useQuery(
+    queries.kanbanCards.byNumber({ number: Number(cardNumber), repoId }),
+  );
+  const repoUrl = `/${repoOwner}/${repoName}`;
 
   if (!card && cardResult.type === "complete") {
     return <Navigate replace to={repoUrl} />;
