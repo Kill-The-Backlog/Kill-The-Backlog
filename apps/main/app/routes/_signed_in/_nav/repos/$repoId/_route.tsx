@@ -1,14 +1,21 @@
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { data, Link, Outlet } from "react-router";
+import { data, Outlet } from "react-router";
 import invariant from "tiny-invariant";
 
-import { Button } from "#components/ui/button.js";
+import type { BreadcrumbHandle } from "#lib/route-handle.js";
+
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 
 import type { Route } from "./+types/_route";
 
 import { KanbanBoard } from "./kanban-board";
+
+export const handle: BreadcrumbHandle<Route.ComponentProps["loaderData"]> = {
+  breadcrumb: (loaderData) => ({
+    label: loaderData.repo.fullName,
+    to: `/repos/${loaderData.repo.id}`,
+  }),
+};
 
 export const loader = async ({ context, params }: Route.LoaderArgs) => {
   const { user } = await requireUser(context);
@@ -30,21 +37,9 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
   return { repo };
 };
 
-export default function Route({ loaderData }: Route.ComponentProps) {
-  const { repo } = loaderData;
-
+export default function Route() {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-border flex items-center gap-3 border-b px-4 py-3">
-        <Button asChild size="icon" variant="ghost">
-          <Link to="/repos">
-            <ArrowLeftIcon />
-          </Link>
-        </Button>
-        <h1 className="font-heading text-sm font-semibold tracking-tight">
-          {repo.fullName}
-        </h1>
-      </div>
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1">
           <KanbanBoard />

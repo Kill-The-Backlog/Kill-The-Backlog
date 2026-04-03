@@ -6,5 +6,5 @@ import type { Route } from "./+types/_route";
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
   await requireUser(context);
-  return redirect("/dashboard");
+  return redirect("/repos");
 };

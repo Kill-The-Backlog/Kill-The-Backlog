@@ -1,0 +1,42 @@
+---
+description: Prefer components reading shared state directly over threading props
+globs: apps/main/app/routes/**
+alwaysApply: false
+---
+
+# Component State Access
+
+Prefer components that read shared state (context, hooks like `useRootLoaderData`) directly over passing that state down as props through intermediate components.
+
+## When to read state directly
+
+- The state comes from a context provider or route loader that's already available to the component (e.g., `useRootLoaderData`, `useQuery`)
+- Threading the value through one or more intermediate components adds prop-drilling without benefit
+
+```tsx
+// ❌ BAD — drilling shared state through intermediaries
+function Layout() {
+  const { user } = useRootLoaderData();
+  return <Nav user={user} />;
+}
+
+function Nav({ user }: { user: User }) {
+  return <UserMenu user={user} />;
+}
+
+// ✅ GOOD — component reads state itself
+function Nav() {
+  return <UserMenu />;
+}
+
+function UserMenu() {
+  const { user } = useRootLoaderData();
+  // ...
+}
+```
+
+## When props are still the right call
+
+- The value is computed or transformed by the parent (not just forwarded)
+- The component is generic/reusable and shouldn't be coupled to a specific data source
+- The data comes from a parent's own loader, not a shared context
