@@ -36,20 +36,14 @@ function extractOAuthCode(
 
   if (!oauthState) {
     throw data(
-      {
-        error: "Authentication session expired",
-        message: "Please try signing in again.",
-      },
+      { error: "Authentication session expired, please try signing in again" },
       { status: 400 },
     );
   }
 
   if (oauthMode !== "signin") {
     throw data(
-      {
-        error: "Invalid authentication mode",
-        message: "This callback is only for signing in.",
-      },
+      { error: "This callback is only for signing in" },
       { status: 400 },
     );
   }
@@ -61,11 +55,10 @@ function extractOAuthCode(
   if (error) {
     throw data(
       {
-        error: "Authentication failed",
-        message:
+        error:
           error === "access_denied"
-            ? "You declined to grant access. Please try again if you'd like to sign in."
-            : "An error occurred during authentication. Please try again.",
+            ? "You declined to grant access, please try again if you'd like to sign in"
+            : "An error occurred during authentication, please try again",
       },
       { status: 400 },
     );
@@ -74,10 +67,7 @@ function extractOAuthCode(
   const code = queryParams.get("code");
   if (!code) {
     throw data(
-      {
-        error: "Authentication failed",
-        message: "OAuth code not found. Please try signing in again.",
-      },
+      { error: "OAuth code not found, please try signing in again" },
       { status: 400 },
     );
   }
@@ -87,9 +77,8 @@ function extractOAuthCode(
   } catch {
     throw data(
       {
-        error: "Invalid authentication request",
-        message:
-          "This authentication request may have been tampered with. Please try signing in again.",
+        error:
+          "This authentication request may have been tampered with, please try signing in again",
       },
       { status: 400 },
     );

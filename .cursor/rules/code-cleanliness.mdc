@@ -42,6 +42,11 @@ alwaysApply: true
 - This applies to all comments: inline, block, doc comments, and explanatory notes — regardless of whether they seem "obvious" or "redundant."
 - If unsure whether a comment is still relevant, keep it.
 
+## Comment Style
+
+- Full-sentence comments start with an uppercase letter and end with a period.
+- Fragment comments (e.g., `// fallback`) may be lowercase without punctuation.
+
 ## Avoid Redundant Comments
 
 - Don't add NEW comments that just restate what the code does

@@ -12,7 +12,7 @@ Use `throw data(...)` from `react-router` for error responses — not `throw new
 import { data } from "react-router";
 
 // Good
-throw data({ error: "Forbidden" }, { status: 403 });
+throw data({ error: "You must be signed in to access this" }, { status: 401 });
 
 // Bad
 throw new Response("Forbidden", { status: 403 });

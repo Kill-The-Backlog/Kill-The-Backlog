@@ -41,7 +41,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
   const octokit = await getUserOctokit(user.id);
   if (!octokit) {
-    throw data({ error: "GitHub account not linked" }, { status: 400 });
+    throw data({ error: "GitHub account not linked" }, { status: 422 });
   }
 
   const repos = buildRepoList(octokit, user.id);
@@ -93,7 +93,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
 
   const octokit = await getUserOctokit(user.id);
   if (!octokit) {
-    throw data({ error: "GitHub account not linked" }, { status: 400 });
+    throw data({ error: "GitHub account not linked" }, { status: 422 });
   }
 
   const { data: repo } = await octokit.rest.repos.get({

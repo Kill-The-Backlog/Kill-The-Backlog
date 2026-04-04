@@ -6,11 +6,16 @@ import { z } from "zod";
 
 import type {} from "./context.js";
 
+// Authorization checks only run on the server where all data is available.
+// On the client, the GitHubRepo table isn't synced so these reads would
+// return null and block the optimistic update.
+
 async function requireCardAccess(
   tx: Transaction,
   cardId: string,
   userId: number,
 ) {
+  if (tx.location !== "server") return;
   const card = await tx.run(
     zql.KanbanCard.where("id", cardId)
       .whereExists("repo", (q) => q.where("userId", userId))
@@ -24,6 +29,7 @@ async function requireRepoAccess(
   repoId: number,
   userId: number,
 ) {
+  if (tx.location !== "server") return;
   const repo = await tx.run(
     zql.GitHubRepo.where("id", repoId).where("userId", userId).one(),
   );

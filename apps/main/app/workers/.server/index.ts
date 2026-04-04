@@ -1,3 +1,5 @@
 import type { AnyWorker } from "#lib/.server/workers/define-worker.js";
 
-export const allWorkers: AnyWorker[] = [];
+import { cardRunWorker } from "./card-run.js";
+
+export const allWorkers: AnyWorker[] = [cardRunWorker];

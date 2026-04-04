@@ -5,11 +5,14 @@ import {
   boolean,
   createBuilder,
   createSchema,
+  enumeration,
   number,
   relationships,
   string,
   table,
 } from "@rocicorp/zero";
+
+export type CardRunStatus = "pending" | "running" | "completed" | "failed";
 
 export const userTable = table("User")
   .columns({
@@ -67,6 +70,20 @@ export const kanbanCardTable = table("KanbanCard")
   })
   .primaryKey("id");
 
+export const cardRunTable = table("CardRun")
+  .columns({
+    id: string(),
+    cardId: string(),
+    repoId: number(),
+    userId: number(),
+    status: enumeration<CardRunStatus>(),
+    branchName: string().optional(),
+    error: string().optional(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey("id");
+
 export const userTableRelationships = relationships(userTable, ({ one, many }) => ({
   githubAccount: one({
     sourceField: ["id"],
@@ -82,6 +99,11 @@ export const userTableRelationships = relationships(userTable, ({ one, many }) =
     sourceField: ["id"],
     destField: ["userId"],
     destSchema: kanbanCardTable,
+  }),
+  cardRuns: many({
+    sourceField: ["id"],
+    destField: ["userId"],
+    destSchema: cardRunTable,
   })
 }));
 export const gitHubAccountTableRelationships = relationships(gitHubAccountTable, ({ one }) => ({
@@ -101,9 +123,36 @@ export const gitHubRepoTableRelationships = relationships(gitHubRepoTable, ({ on
     sourceField: ["id"],
     destField: ["repoId"],
     destSchema: kanbanCardTable,
+  }),
+  cardRuns: many({
+    sourceField: ["id"],
+    destField: ["repoId"],
+    destSchema: cardRunTable,
   })
 }));
-export const kanbanCardTableRelationships = relationships(kanbanCardTable, ({ one }) => ({
+export const kanbanCardTableRelationships = relationships(kanbanCardTable, ({ one, many }) => ({
+  repo: one({
+    sourceField: ["repoId"],
+    destField: ["id"],
+    destSchema: gitHubRepoTable,
+  }),
+  user: one({
+    sourceField: ["userId"],
+    destField: ["id"],
+    destSchema: userTable,
+  }),
+  cardRuns: many({
+    sourceField: ["id"],
+    destField: ["cardId"],
+    destSchema: cardRunTable,
+  })
+}));
+export const cardRunTableRelationships = relationships(cardRunTable, ({ one }) => ({
+  card: one({
+    sourceField: ["cardId"],
+    destField: ["id"],
+    destSchema: kanbanCardTable,
+  }),
   repo: one({
     sourceField: ["repoId"],
     destField: ["id"],
@@ -125,12 +174,14 @@ export const schema = createSchema({
     gitHubAccountTable,
     gitHubRepoTable,
     kanbanCardTable,
+    cardRunTable,
   ],
   relationships: [
     userTableRelationships,
     gitHubAccountTableRelationships,
     gitHubRepoTableRelationships,
     kanbanCardTableRelationships,
+    cardRunTableRelationships,
   ],
 });
 

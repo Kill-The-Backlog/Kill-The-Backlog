@@ -23,6 +23,7 @@ model User {
   githubAccount GitHubAccount?
   githubRepos   GitHubRepo[]
   kanbanCards   KanbanCard[]
+  cardRuns      CardRun[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -52,6 +53,7 @@ model GitHubRepo {
   isPrivate      Boolean
   defaultBranch  String
   kanbanCards    KanbanCard[]
+  cardRuns       CardRun[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -68,8 +70,31 @@ model KanbanCard {
   title     String
   columnId  String
   sortOrder String
+  cardRuns  CardRun[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
   @@unique([repoId, number])
+}
+
+enum CardRunStatus {
+  pending
+  running
+  completed
+  failed
+}
+
+model CardRun {
+  id         String        @id @db.Uuid
+  cardId     String        @db.Uuid
+  card       KanbanCard    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  repoId     Int
+  repo       GitHubRepo    @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     CardRunStatus @default(pending)
+  branchName String?
+  error      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }

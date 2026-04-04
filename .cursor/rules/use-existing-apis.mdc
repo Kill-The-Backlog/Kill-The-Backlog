@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+---
+
+# Use Existing APIs — Don't Rebuild the Wheel
+
+Before writing manual implementations, always check whether the library or package already provides a method for what you need.
+
+## Before writing code that wraps a tool or service
+
+1. Use Context7 (`resolve-library-id` → `query-docs`) to look up the library's current documentation and API surface.
+2. Read the package's TypeScript declarations (`.d.ts` in `node_modules/<pkg>/dist/`) to discover available methods.
+3. Check internal workspace packages (`packages/`) for existing utilities before creating new ones.
+4. Prefer typed SDK methods over raw shell commands, manual HTTP calls, or string interpolation.
+
+## Examples of what to avoid
+
+- Running `git clone` via a shell command when the SDK has `sandbox.git.clone()`
+- Manually constructing API requests when the client library has a typed method
+- Reimplementing string/date/array helpers that already exist in a shared package
+- Writing raw SQL when Kysely's DSL covers the operation
+
+## When in doubt
+
+Spend a minute reading types before writing an implementation. If a package is central to the task, scan its API surface first — don't assume the only option is the lowest-level one.

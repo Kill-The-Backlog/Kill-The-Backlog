@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+---
+
+# Error Responses in Loaders and Actions
+
+## Shape
+
+Use `{ error: string }` — a single `error` field with a human-readable message.
+
+```typescript
+throw data({ error: "Run not found" }, { status: 404 });
+```
+
+Do not split into separate `error` + `message` fields. One descriptive string is enough.
+
+## Capitalization and tone
+
+- Sentence case, no trailing period: `"Authentication session expired, please try signing in again"`
+- Be specific about what went wrong: `"Card not found"` over `"Not found"`, `"You must be signed in to access this"` over `"Unauthorized"`
+
+## When to add a machine-readable code
+
+Only if the client needs to branch on error type. Add a `code` field alongside `error`:
+
+```typescript
+throw data(
+  { code: "GITHUB_NOT_LINKED", error: "GitHub account not linked" },
+  { status: 400 },
+);
+```
+
+Don't add `code` preemptively — wait until a consumer actually needs it.

@@ -12,9 +12,26 @@ import type { RepoOutletContext } from "../../_route";
 import type { Route } from "./+types/_route";
 
 import { COLUMNS } from "../../kanban-board";
+import { CardRunSection } from "./card-run-section";
 
 export default function Route({ params }: Route.ComponentProps) {
   const { cardNumber, repoName, repoOwner } = params;
+
+  return (
+    <CardDetailPanel
+      key={`${repoOwner}/${repoName}/c/${cardNumber}`}
+      params={params}
+    />
+  );
+}
+
+function CardDetailPanel({
+  params,
+}: {
+  params: Route.ComponentProps["params"];
+}) {
+  const { cardNumber, repoName, repoOwner } = params;
+
   const { repoId } = useOutletContext<RepoOutletContext>();
 
   const [card, cardResult] = useQuery(
@@ -30,7 +47,7 @@ export default function Route({ params }: Route.ComponentProps) {
   const column = COLUMNS.find((c) => c.id === card?.columnId);
 
   return (
-    <aside className="border-border bg-background flex w-80 shrink-0 flex-col border-l">
+    <aside className="border-border bg-background flex w-96 shrink-0 flex-col border-l">
       <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <h2 className="font-heading truncate text-sm font-semibold tracking-tight">
           Card details
@@ -42,55 +59,61 @@ export default function Route({ params }: Route.ComponentProps) {
         </Button>
       </div>
 
-      <dl className="flex flex-col gap-4 px-4 py-4">
-        <DetailField
-          label="Title"
-          loading={loading}
-          skeleton={<Skeleton className="h-5 w-40 rounded" />}
-        >
-          <dd className="text-sm wrap-break-word">{card?.title}</dd>
-        </DetailField>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <dl className="flex flex-col gap-4 px-4 py-4">
+          <DetailField
+            label="Title"
+            loading={loading}
+            skeleton={<Skeleton className="h-5 w-40 rounded" />}
+          >
+            <dd className="text-sm wrap-break-word">{card?.title}</dd>
+          </DetailField>
 
-        <DetailField
-          label="Column"
-          loading={loading}
-          skeleton={<Skeleton className="h-5 w-20 rounded" />}
-        >
-          <dd>
-            <Badge variant="secondary">{column?.title ?? card?.columnId}</Badge>
-          </dd>
-        </DetailField>
+          <DetailField
+            label="Column"
+            loading={loading}
+            skeleton={<Skeleton className="h-5 w-20 rounded" />}
+          >
+            <dd>
+              <Badge variant="secondary">
+                {column?.title ?? card?.columnId}
+              </Badge>
+            </dd>
+          </DetailField>
 
-        <DetailField
-          label="Owner"
-          loading={loading}
-          skeleton={
-            <div className="flex items-center gap-2">
-              <Skeleton className="size-6 rounded-full" />
-              <Skeleton className="h-5 w-24 rounded" />
-            </div>
-          }
-        >
-          <dd>
-            {card?.user ? (
+          <DetailField
+            label="Owner"
+            loading={loading}
+            skeleton={
               <div className="flex items-center gap-2">
-                <Avatar size="sm">
-                  <AvatarImage
-                    alt={card.user.displayName}
-                    src={card.user.avatarUrl ?? undefined}
-                  />
-                  <AvatarFallback>
-                    {card.user.displayName[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm">{card.user.displayName}</span>
+                <Skeleton className="size-6 rounded-full" />
+                <Skeleton className="h-5 w-24 rounded" />
               </div>
-            ) : (
-              <span className="text-muted-foreground text-sm">Unknown</span>
-            )}
-          </dd>
-        </DetailField>
-      </dl>
+            }
+          >
+            <dd>
+              {card?.user ? (
+                <div className="flex items-center gap-2">
+                  <Avatar size="sm">
+                    <AvatarImage
+                      alt={card.user.displayName}
+                      src={card.user.avatarUrl ?? undefined}
+                    />
+                    <AvatarFallback>
+                      {card.user.displayName[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm">{card.user.displayName}</span>
+                </div>
+              ) : (
+                <span className="text-muted-foreground text-sm">Unknown</span>
+              )}
+            </dd>
+          </DetailField>
+        </dl>
+
+        {card && <CardRunSection cardId={card.id} />}
+      </div>
     </aside>
   );
 }
