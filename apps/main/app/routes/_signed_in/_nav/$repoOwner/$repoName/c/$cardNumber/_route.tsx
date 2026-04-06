@@ -47,7 +47,7 @@ function CardDetailPanel({
   const column = COLUMNS.find((c) => c.id === card?.columnId);
 
   return (
-    <aside className="border-border bg-background flex w-96 shrink-0 flex-col border-l">
+    <aside className="border-border bg-background flex h-full flex-col border-l">
       <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <h2 className="font-heading truncate text-sm font-semibold tracking-tight">
           Card details

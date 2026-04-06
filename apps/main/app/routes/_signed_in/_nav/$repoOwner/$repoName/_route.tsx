@@ -1,8 +1,14 @@
 import { useMemo } from "react";
-import { data, Outlet } from "react-router";
+import { useDefaultLayout } from "react-resizable-panels";
+import { data, useOutlet } from "react-router";
 
 import type { BreadcrumbHandle } from "#lib/route-handle.js";
 
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "#components/ui/resizable.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 
@@ -45,14 +51,36 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     [loaderData.repo.id],
   );
 
+  const outlet = useOutlet(outletContext);
+
+  const panelIds = outlet ? ["board", "detail"] : ["board"];
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "repo-layout",
+    panelIds,
+  });
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1">
-          <KanbanBoard repoId={loaderData.repo.id} />
-        </div>
-        <Outlet context={outletContext} />
-      </div>
-    </div>
+    <ResizablePanelGroup
+      defaultLayout={defaultLayout}
+      onLayoutChanged={onLayoutChanged}
+      orientation="horizontal"
+    >
+      <ResizablePanel id="board">
+        <KanbanBoard repoId={loaderData.repo.id} />
+      </ResizablePanel>
+      {outlet && (
+        <>
+          <ResizableHandle />
+          <ResizablePanel
+            defaultSize="50%"
+            id="detail"
+            maxSize="50%"
+            minSize={320}
+          >
+            {outlet}
+          </ResizablePanel>
+        </>
+      )}
+    </ResizablePanelGroup>
   );
 }
