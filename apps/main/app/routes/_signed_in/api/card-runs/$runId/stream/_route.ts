@@ -48,8 +48,11 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
         cursor += chunks.length;
       } catch (error) {
+        console.error("Card run stream error:", error);
         abort();
-        throw error;
+        // Don't re-throw — this runs inside eventStream's setup callback,
+        // so an unhandled throw crashes the entire backend process.
+        return;
       }
 
       // @todo: Keeps polling if the worker crashes without writing the done
