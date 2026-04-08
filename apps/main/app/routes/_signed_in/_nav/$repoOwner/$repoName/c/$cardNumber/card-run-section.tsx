@@ -30,7 +30,7 @@ export function CardRunSection({ cardId }: { cardId: string }) {
     latestRun.status !== "completed" &&
     latestRun.status !== "failed";
 
-  const { output } = useCardRunStream({ runId: latestRun?.id });
+  const { events } = useCardRunStream({ runId: latestRun?.id });
 
   if (isRunning && isStarting) {
     setIsStarting(false);
@@ -40,7 +40,7 @@ export function CardRunSection({ cardId }: { cardId: string }) {
     if (outputRef.current) {
       outputRef.current.scrollTop = outputRef.current.scrollHeight;
     }
-  }, [output]);
+  }, [events]);
 
   async function startRun() {
     setIsStarting(true);
@@ -110,12 +110,14 @@ export function CardRunSection({ cardId }: { cardId: string }) {
         </div>
       )}
 
-      {output.length > 0 && (
+      {events.length > 0 && (
         <pre
           className="bg-muted/50 border-border min-h-0 flex-1 overflow-auto border-t p-3 font-mono text-[11px] leading-relaxed"
           ref={outputRef}
         >
-          {output}
+          {events
+            .flatMap((event) => ("text" in event ? [event.text] : []))
+            .join("\n")}
         </pre>
       )}
     </div>

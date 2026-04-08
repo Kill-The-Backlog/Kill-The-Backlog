@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# File Placement
+
+Before creating a new file, stop and consider where it belongs:
+
+1. **Look at neighbors.** List the target directory and read a few sibling files. Does the new file share the same concern? A directory of BullMQ workers is not the place for a provider-specific parser.
+2. **Match the directory's role.** Each directory has an implicit purpose defined by its existing contents. New files should reinforce that purpose, not dilute it.
+3. **Think one level up.** If no existing directory fits, consider whether a new sibling directory is warranted. Name it for the concept it groups (e.g., `providers/`, `integrations/`), not for the single file going into it.
+4. **Shared vs. app-local.** Code used by multiple packages belongs in `packages/` (e.g., `@ktb/shared`). Code used only within the app stays in `apps/main/app/`.

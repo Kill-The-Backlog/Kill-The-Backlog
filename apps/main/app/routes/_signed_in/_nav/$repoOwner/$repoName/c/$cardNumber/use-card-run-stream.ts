@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
+import type { RunOutputEvent } from "#lib/run-output.js";
+
+import { runOutputEventSchema } from "#lib/run-output.js";
+
 export function useCardRunStream({ runId }: { runId: string | undefined }) {
-  const [output, setOutput] = useState("");
+  const [events, setEvents] = useState<RunOutputEvent[]>([]);
   const prevRunId = useRef(runId);
 
   if (runId !== prevRunId.current) {
     prevRunId.current = runId;
-    setOutput("");
+    setEvents([]);
   }
 
   useEffect(() => {
@@ -15,8 +19,15 @@ export function useCardRunStream({ runId }: { runId: string | undefined }) {
     const eventSource = new EventSource(`/api/card-runs/${runId}/stream`);
 
     eventSource.onmessage = (event: MessageEvent<string>) => {
-      const text = JSON.parse(event.data) as string;
-      setOutput((prev) => prev + text);
+      try {
+        const data = runOutputEventSchema.parse(JSON.parse(event.data));
+        setEvents((prev) => [...prev, data]);
+      } catch {
+        eventSource.close();
+        throw new Error(
+          `Failed to parse card run stream event: ${event.data}`,
+        );
+      }
     };
 
     eventSource.onerror = () => {
@@ -32,5 +43,5 @@ export function useCardRunStream({ runId }: { runId: string | undefined }) {
     };
   }, [runId]);
 
-  return { output };
+  return { events };
 }

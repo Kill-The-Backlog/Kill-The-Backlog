@@ -5,6 +5,9 @@ import type { Job } from "bullmq";
 import { Sandbox } from "e2b";
 import { quote } from "shell-quote";
 
+import type { RunOutputEvent } from "#lib/run-output.js";
+
+import { createClaudeCodeParser } from "#lib/.server/agents/claude-code.js";
 import { db } from "#lib/.server/clients/db.js";
 import { redis } from "#lib/.server/clients/redis.js";
 import { serverEnv } from "#lib/.server/env/server.js";
@@ -15,8 +18,6 @@ export type CardRunJobData = {
   runId: string;
   userId: number;
 };
-
-export const CARD_RUN_DONE_SENTINEL = "\n[ktb:done]";
 
 export function cardRunOutputKey(runId: string) {
   return `card-run:${runId}:output`;
@@ -41,7 +42,7 @@ function buildBranchName(runId: string) {
 
 async function handleCardRun(job: Job<CardRunJobData>): Promise<undefined> {
   const { repoId, runId, userId } = job.data;
-  const appendOutput = makeOutputAppender(runId);
+  const output = makeOutputAppender(runId);
 
   let sandbox: null | Sandbox = null;
 
@@ -70,7 +71,7 @@ async function handleCardRun(job: Job<CardRunJobData>): Promise<undefined> {
       timeoutMs: 600_000,
     });
 
-    await appendOutput("[ktb] Cloning repository...\n");
+    output.enqueue({ text: "Cloning repository...", type: "status" });
 
     await sandbox.git.clone(`https://github.com/${fullName}.git`, {
       depth: 1,
@@ -85,38 +86,46 @@ async function handleCardRun(job: Job<CardRunJobData>): Promise<undefined> {
       "ktb@users.noreply.github.com",
     );
 
-    await appendOutput("[ktb] Creating branch...\n");
+    output.enqueue({ text: "Creating branch...", type: "status" });
 
     await sandbox.git.createBranch(REPO_PATH, branchName);
 
-    await appendOutput("[ktb] Running Claude Code...\n");
+    output.enqueue({ text: "Running Claude Code...", type: "status" });
 
-    const prompt = `${cardTitle}\n\nAfter making changes, do NOT commit.`;
+    const parser = createClaudeCodeParser(output.enqueue);
 
     await sandbox.commands.run(
       quote([
         "claude",
         "--dangerously-skip-permissions",
         "--output-format",
-        "text",
+        "stream-json",
+        "--verbose",
         "-p",
-        prompt,
+        cardTitle,
       ]),
       {
         cwd: REPO_PATH,
-        onStderr: (data) => void appendOutput(data),
-        onStdout: (data) => void appendOutput(data),
+        onStderr: (data) => {
+          output.enqueue({ text: data, type: "error" });
+        },
+        onStdout: (data) => {
+          parser.feed(data);
+        },
       },
     );
 
-    await appendOutput("\n[ktb] Committing and pushing...\n");
+    parser.flush();
+    await output.flush();
+
+    output.enqueue({ text: "Committing and pushing...", type: "status" });
 
     await sandbox.git.add(REPO_PATH, { all: true });
 
     const status = await sandbox.git.status(REPO_PATH);
     if (status.isClean) {
       await updateRun(runId, { status: "completed" });
-      await appendOutput("\n[ktb] No changes were made.\n");
+      output.enqueue({ text: "No changes were made.", type: "status" });
     } else {
       await sandbox.git.commit(REPO_PATH, `ktb: ${cardTitle}`);
 
@@ -128,26 +137,47 @@ async function handleCardRun(job: Job<CardRunJobData>): Promise<undefined> {
       });
 
       await updateRun(runId, { branchName, status: "completed" });
-      await appendOutput(`\n[ktb] Done! Branch: ${branchName}\n`);
+      output.enqueue({
+        text: `Done! Branch: ${branchName}`,
+        type: "status",
+      });
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
 
     await updateRun(runId, { error: message, status: "failed" });
 
-    await appendOutput(`\n[ktb] Error: ${message}\n`);
+    output.enqueue({ text: message, type: "error" });
 
     throw error;
   } finally {
-    await appendOutput(CARD_RUN_DONE_SENTINEL);
-    if (sandbox) await sandbox.kill();
+    try {
+      output.enqueue({ type: "done" });
+      await output.flush();
+    } finally {
+      if (sandbox) await sandbox.kill();
+    }
   }
 }
 
 function makeOutputAppender(runId: string) {
   const key = cardRunOutputKey(runId);
-  return (data: string) =>
-    redis.pipeline().rpush(key, data).expire(key, OUTPUT_TTL_SECONDS).exec();
+  let pending = Promise.resolve();
+
+  function enqueue(event: RunOutputEvent) {
+    pending = pending.then(async () => {
+      await redis
+        .pipeline()
+        .rpush(key, JSON.stringify(event))
+        .expire(key, OUTPUT_TTL_SECONDS)
+        .exec();
+    });
+  }
+
+  return {
+    enqueue,
+    flush: () => pending,
+  };
 }
 
 async function updateRun(runId: string, values: Updateable<CardRun>) {

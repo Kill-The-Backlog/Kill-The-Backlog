@@ -4,10 +4,8 @@ import { eventStream } from "remix-utils/sse/server";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { redis } from "#lib/.server/clients/redis.js";
-import {
-  CARD_RUN_DONE_SENTINEL,
-  cardRunOutputKey,
-} from "#workers/.server/card-run.js";
+import { runOutputEventSchema } from "#lib/run-output.js";
+import { cardRunOutputKey } from "#workers/.server/card-run.js";
 
 import type { Route } from "./+types/_route.js";
 
@@ -38,19 +36,20 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
         const chunks = await redis.lrange(redisKey, cursor, -1);
 
         for (const chunk of chunks) {
-          send({ data: JSON.stringify(chunk) });
-
-          if (chunk === CARD_RUN_DONE_SENTINEL) {
+          const parsed = runOutputEventSchema.parse(JSON.parse(chunk));
+          if (parsed.type === "done") {
             send({ data: "{}", event: "done" });
             abort();
             return;
           }
+
+          send({ data: chunk });
         }
 
         cursor += chunks.length;
-      } catch {
+      } catch (error) {
         abort();
-        return;
+        throw error;
       }
 
       // @todo: Keeps polling if the worker crashes without writing the done

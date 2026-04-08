@@ -24,6 +24,8 @@ Examples:
 
 ## ESLint autofix
 
+After finishing code changes, **always run `lint:fix` first** instead of manually fixing lint errors. Only manually fix lint issues that remain after the autofix pass.
+
 From the repo root, run `lint:fix` for a workspace package with `pnpm --filter` (for example `@ktb/main`, `@ktb/db`, `@ktb/shared`):
 
 - **Specific files** (paths relative to that package):  
