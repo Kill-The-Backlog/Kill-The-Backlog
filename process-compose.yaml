@@ -1,5 +1,6 @@
 version: "0.5"
 is_strict: true
+
 processes:
   #
   # Apps
@@ -9,7 +10,14 @@ processes:
     command: "pnpm apps:www dev --port 4321"
 
   main:
-    command: "PORT=5173 pnpm apps:main dev"
+    command: "pnpm apps:main dev"
+    environment:
+      - DB_URL=postgres://ktb:ktb@localhost:5432/ktb_development
+      - GITHUB_OAUTH_REDIRECT_URI=https://ktb.localhost/auth/github/callback
+      - MAIN_ORIGIN=https://ktb.localhost
+      - PORT=5173
+      - REDIS_URL=redis://localhost:6379
+      - ZERO_CACHE_URL=https://zero.ktb.localhost
     depends_on:
       nginx:
         condition: process_started
@@ -20,6 +28,10 @@ processes:
 
   zero-cache:
     command: "pnpm apps:main exec zero-cache-dev --query-forward-cookies --mutate-forward-cookies"
+    environment:
+      - ZERO_MUTATE_URL=http://localhost:5173/api/zero/mutate
+      - ZERO_QUERY_URL=http://localhost:5173/api/zero/query
+      - ZERO_UPSTREAM_DB=postgres://ktb:ktb@localhost:5432/ktb_development
     depends_on:
       postgresql:
         condition: process_healthy
@@ -30,6 +42,8 @@ processes:
 
   prisma-studio:
     command: "pnpm prisma studio --browser none"
+    environment:
+      - DB_URL=postgres://ktb:ktb@localhost:5432/ktb_development
     depends_on:
       nginx:
         condition: process_started

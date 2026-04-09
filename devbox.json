@@ -8,5 +8,8 @@
     "mkcert@latest",
     "awscli2@latest"
   ],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  },
   "env_from": ".env"
 }

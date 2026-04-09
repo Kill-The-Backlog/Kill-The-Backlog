@@ -13,6 +13,10 @@ RUN corepack enable pnpm
 #
 FROM base AS builder
 
+RUN apt-get update -qq && \
+  apt-get install --no-install-recommends -y python3 && \
+  rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 

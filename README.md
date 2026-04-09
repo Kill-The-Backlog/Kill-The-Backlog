@@ -1,105 +1,129 @@
 # Kill The Backlog
 
+AI-powered kanban board for your GitHub repos. Create cards, and an AI agent picks them up and opens PRs with real code changes.
+
+![Kill The Backlog screenshot](docs/screenshot.png)
+
+## Quick Start
+
+Run locally with Docker in under 5 minutes. The only prerequisite is [Docker](https://docs.docker.com/get-docker/).
+
+### 1. Clone and configure
+
+```sh
+git clone https://github.com/Kill-The-Backlog/Kill-The-Backlog.git
+cd Kill-The-Backlog
+cp .env.example .env
+```
+
+### 2. Create a GitHub OAuth App
+
+1. Go to [**Settings → Developer settings → OAuth Apps → New OAuth App**](https://github.com/settings/applications/new)
+2. Fill in:
+   - **Application name:** Kill The Backlog (or anything you like)
+   - **Homepage URL:** `http://localhost:3000`
+   - **Authorization callback URL:** `http://localhost:3000/auth/github/callback`
+3. Click **Register application**
+4. Copy the **Client ID** and generate a **Client secret**
+5. Paste both into your `.env`:
+
+```
+GITHUB_OAUTH_CLIENT_ID=your_client_id
+GITHUB_OAUTH_CLIENT_SECRET=your_client_secret
+```
+
+### 3. Start
+
+```sh
+docker compose up
+```
+
+The first run builds the app image and may take a few minutes. Once you see `Server is running on http://localhost:3000`, open [**http://localhost:3000**](http://localhost:3000) and sign in with GitHub.
+
+### Recommended: AI card runs
+
+The core idea of Kill The Backlog is that you create a card and an AI agent picks it up, works on it in a sandboxed environment, and pushes a branch. Without AI card runs the app is just a kanban board.
+
+Right now card runs use **[Anthropic](https://console.anthropic.com/)** (Claude Code does the coding) and **[E2B](https://e2b.dev/)** (cloud sandboxes where the repo is cloned and the agent executes). Support for other models and sandbox providers is planned.
+
+Add both keys to your `.env`:
+
+```
+ANTHROPIC_API_KEY=your_key
+E2B_API_KEY=your_key
+```
+
+Then restart with `docker compose up`. Both services have free tiers that are enough to try things out.
+
+---
+
 ## Developing
 
-### Setup
+### With Devbox (recommended)
 
-1. Enter a devbox shell:
+This project uses [Devbox](https://www.jetify.com/devbox) to manage system-level dependencies (Node.js 22, PostgreSQL 18, Valkey, nginx, mkcert).
 
-```sh
-$ devbox shell
-```
-
-2. Run:
+#### First-time setup
 
 ```sh
-$ ./setup-devbox.sh
+devbox shell
+./setup-devbox.sh
 ```
 
-### Developing
+Create a GitHub OAuth App with callback URL `https://ktb.localhost/auth/github/callback` and add the credentials to your `.env`. Infrastructure variables (DB URL, Redis, Zero, etc.) are set automatically by `process-compose.yaml`.
+
+#### Day-to-day development
 
 ```sh
-$ devbox services up
+devbox services up
 ```
+
+This starts nginx (HTTPS), PostgreSQL, Valkey, the app, Zero cache, and the marketing site. Open [**https://ktb.localhost**](https://ktb.localhost).
+
+### With Docker + local Node
+
+If you prefer not to use Devbox, you can run infrastructure in Docker and the app locally:
+
+```sh
+docker compose up postgres valkey -d
+```
+
+Add these to your `.env` (alongside the GitHub OAuth credentials from the quick start):
+
+```sh
+DB_URL=postgres://ktb:ktb@localhost:5432/ktb
+GITHUB_OAUTH_REDIRECT_URI=http://localhost:5173/auth/github/callback
+MAIN_ORIGIN=http://localhost:5173
+REDIS_URL=redis://localhost:6379
+ZERO_CACHE_URL=http://localhost:4848
+```
+
+Then install dependencies, run migrations, and start the dev server:
+
+```sh
+corepack enable pnpm
+pnpm install
+pnpm turbo build
+pnpm prisma migrate deploy
+pnpm apps:main dev
+```
+
+> **Note:** This setup doesn't include Zero cache, so board updates won't appear in realtime (a page refresh will pick them up). Use Devbox for the full experience.
+
+---
+
+## Architecture
+
+| Component                       | Role                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| **Main app** (`apps/main`)      | React Router 7 + Express. Kanban UI, GitHub OAuth, BullMQ workers                 |
+| **Marketing site** (`apps/www`) | Astro static site                                                                 |
+| **PostgreSQL**                  | Primary database (Prisma migrations, Kysely queries)                              |
+| **Valkey**                      | Redis-compatible store for BullMQ job queues                                      |
+| **Zero cache**                  | [Rocicorp Zero](https://zero.rocicorp.dev) — realtime sync between DB and browser |
+
+---
 
 ## Deploying
 
-### Setup
-
-1. Install gcloud and werf.
-
-2. Configure gcloud:
-
-```sh
-gcloud auth login
-gcloud auth configure-docker <REGION>-docker.pkg.dev
-gcloud config set project <PROJECT_ID>
-gcloud config set compute/region <REGION>
-gcloud container clusters get-credentials primary
-```
-
-### Deploying
-
-```sh
-werf converge
-```
-
-## Setting up a new GKE Autopilot cluster
-
-1. Create the cluster in the GCP console.
-
-2. Configure gcloud:
-
-```sh
-gcloud container clusters get-credentials <CLUSTER_NAME>
-```
-
-3. Install cert-manager:
-
-```sh
-# Request values copied from https://oneuptime.com/blog/post/2026-01-17-helm-cert-manager-tls-certificates/view
-# Note: GKE Autopilot will adjust requests to meet its supported minimums.
-helm upgrade --install cert-manager cert-manager \
-  --repo https://charts.jetstack.io \
-  --create-namespace \
-  --namespace cert-manager \
-  --set resources.requests.cpu=50m \
-  --set resources.requests.memory=64Mi \
-  --set webhook.resources.requests.cpu=25m \
-  --set webhook.resources.requests.memory=32Mi \
-  --set cainjector.resources.requests.cpu=25m \
-  --set cainjector.resources.requests.memory=64Mi \
-  --set startupapicheck.resources.requests.cpu=25m \
-  --set startupapicheck.resources.requests.memory=32Mi \
-  --set crds.enabled=true \
-  --set crds.keep=true \
-  --set global.leaderElection.namespace=cert-manager
-```
-
-4. Verify cert-manager install
-
-```sh
-kubectl get pods -n cert-manager
-```
-
-You should see three pods running: cert-manager, cert-manager-cainjector, and cert-manager-webhook.
-
-5. Create a regional static IP in the GCP console.
-
-6. Install ingress-nginx:
-
-```sh
-# Request values copied from the ingress-nginx helm chart.
-# Note: GKE Autopilot will adjust requests to meet its supported minimums.
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --create-namespace \
-  --namespace ingress-nginx \
-  --set controller.admissionWebhooks.createSecretJob.resources.requests.cpu=10m \
-  --set controller.admissionWebhooks.createSecretJob.resources.requests.memory=20Mi \
-  --set controller.admissionWebhooks.patchWebhookJob.resources.requests.cpu=10m \
-  --set controller.admissionWebhooks.patchWebhookJob.resources.requests.memory=20Mi \
-  --set controller.service.loadBalancerIP=<STATIC_IP> \
-  --set controller.allowSnippetAnnotations=true \
-  --set controller.config.annotations-risk-level=Critical
-```
+See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.

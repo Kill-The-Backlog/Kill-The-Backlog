@@ -1,6 +1,7 @@
 {
   "name": "@ktb/root",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "apps:main": "pnpm --filter \"@ktb/main\"",
@@ -23,6 +24,7 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/engines",
+      "@rocicorp/zero-sqlite3",
       "@tailwindcss/oxide",
       "core-js",
       "esbuild",

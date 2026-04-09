@@ -1,18 +1,44 @@
 # Dependencies
-node_modules
+**/node_modules
 
 # Build outputs & caches
-.astro
-.react-router
-.turbo
-build
-dist
+**/.astro
+**/.react-router
+**/.turbo
+**/build
+tmp
+**/zero.db
+**/zero.db-*
 
 # Local tooling & config
 .cursor
 .devbox
-.DS_Store
+**/.DS_Store
 .git
-.helm
 .vscode
+
+# Secrets
+.env
+.env.example
+
+# Devbox
 devbox.d
+devbox.json
+devbox.lock
+setup-devbox.sh
+
+# Deployment & orchestration
+.helm
+.helmignore
+docker-compose.yml
+Dockerfile
+process-compose.yaml
+werf.yaml
+
+# Documentation & misc
+docs
+LICENSE
+README.md
+.gitignore
+.prettierignore
+prettier.config.mjs
