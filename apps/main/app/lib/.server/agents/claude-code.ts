@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-import type { RunOutputEvent } from "#lib/run-output.js";
-
 const claudeTextBlock = z.object({
   text: z.string(),
   type: z.literal("text"),
@@ -14,9 +12,7 @@ const claudeAssistantEvent = z.object({
   type: z.literal("assistant"),
 });
 
-export function createClaudeCodeParser(
-  onEvent: (event: RunOutputEvent) => void,
-) {
+export function createClaudeCodeParser(onText: (text: string) => void) {
   let buffer = "";
 
   return {
@@ -26,13 +22,13 @@ export function createClaudeCodeParser(
       buffer = lines.pop()!;
       for (const line of lines) {
         if (line.length > 0) {
-          processLine(line, onEvent);
+          processLine(line, onText);
         }
       }
     },
     flush() {
       if (buffer.length > 0) {
-        processLine(buffer, onEvent);
+        processLine(buffer, onText);
         buffer = "";
       }
     },
@@ -41,7 +37,7 @@ export function createClaudeCodeParser(
 
 function processLine(
   line: string,
-  onEvent: (event: RunOutputEvent) => void,
+  onText: (text: string) => void,
 ): void {
   const result = claudeAssistantEvent.safeParse(JSON.parse(line));
   if (!result.success) return;
@@ -49,7 +45,7 @@ function processLine(
   for (const block of result.data.message.content) {
     const textBlock = claudeTextBlock.safeParse(block);
     if (textBlock.success) {
-      onEvent({ text: textBlock.data.text, type: "assistant-text" });
+      onText(textBlock.data.text);
     }
   }
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { RunOutputEvent } from "#lib/run-output.js";
+import type { RunOutputEvent } from "#lib/run-output/schemas.js";
 
-import { runOutputEventSchema } from "#lib/run-output.js";
+import { runOutputEventSchema } from "#lib/run-output/schemas.js";
 
 export function useCardRunStream({ runId }: { runId: string | undefined }) {
   const [events, setEvents] = useState<RunOutputEvent[]>([]);

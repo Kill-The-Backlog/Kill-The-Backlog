@@ -94,7 +94,6 @@ model CardRun {
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   status     CardRunStatus @default(pending)
   branchName String?
-  error      String?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 }

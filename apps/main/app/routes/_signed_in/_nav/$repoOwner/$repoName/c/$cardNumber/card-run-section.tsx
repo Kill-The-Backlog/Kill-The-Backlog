@@ -1,4 +1,5 @@
 import type { CardRunStatus } from "@ktb/db/types";
+import type { Row } from "@rocicorp/zero";
 
 import {
   CheckCircleIcon,
@@ -8,14 +9,15 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@rocicorp/zero/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 
-import type { RunOutputEvent } from "#lib/run-output.js";
+import type { RunOutputEvent } from "#lib/run-output/schemas.js";
+import type { Step } from "#lib/run-output/steps.js";
 
-import { Alert, AlertDescription } from "#components/ui/alert.js";
 import { Button } from "#components/ui/button.js";
+import { groupEventsIntoSteps } from "#lib/run-output/steps.js";
 import { cn } from "#lib/utils.js";
 import { queries } from "#zero/queries.js";
 
@@ -23,17 +25,11 @@ import type { Route } from "./+types/_route";
 
 import { useCardRunStream } from "./use-card-run-stream";
 
-type Step = {
-  label: string;
-  messages: { text: string; type: "assistant-text" | "error" }[];
-};
-
 type StepStatus = "completed" | "failed" | "running";
 
 export function CardRunSection({ cardId }: { cardId: string }) {
   const [latestRun] = useQuery(queries.cardRuns.latestByCard({ cardId }));
-  const { repoName, repoOwner } = useParams<Route.ComponentProps["params"]>();
-  const outputRef = useRef<HTMLDivElement>(null);
+  const { events } = useCardRunStream({ runId: latestRun?.id });
 
   const isRunning =
     latestRun != null &&
@@ -43,130 +39,160 @@ export function CardRunSection({ cardId }: { cardId: string }) {
   const { isStarting, startRun } = useStartCardRun(cardId, isRunning);
   const isBusy = isRunning || isStarting;
 
-  const buttonLabel =
-    isStarting || latestRun?.status === "pending"
-      ? "Starting"
-      : isRunning
-        ? "Running"
-        : "Run";
+  return (
+    <div className="border-border flex min-h-0 flex-1 flex-col border-t">
+      <CardRunHeader
+        isBusy={isBusy}
+        isStarting={isStarting}
+        latestRun={latestRun}
+        onStartRun={() => void startRun()}
+      />
 
-  const { events } = useCardRunStream({ runId: latestRun?.id });
-  const steps = useMemo(() => groupEventsIntoSteps(events), [events]);
+      <CardRunBody events={events} latestRun={latestRun} />
+    </div>
+  );
+}
+
+function BranchLinkButton({ latestRun }: { latestRun: Row["CardRun"] }) {
+  const { repoName, repoOwner } = useParams<Route.ComponentProps["params"]>();
+
+  if (
+    latestRun.status !== "completed" ||
+    latestRun.branchName == null ||
+    repoOwner == null ||
+    repoName == null
+  ) {
+    return null;
+  }
+
+  const compareUrl = githubCompareUrl({
+    branch: latestRun.branchName,
+    repoName,
+    repoOwner,
+  });
+
+  return (
+    <Button asChild size="xs" variant="outline">
+      <a href={compareUrl} rel="noopener noreferrer" target="_blank">
+        <GitBranchIcon weight="bold" />
+        {latestRun.branchName}
+      </a>
+    </Button>
+  );
+}
+
+function CardRunBody({
+  events,
+  latestRun,
+}: {
+  events: RunOutputEvent[];
+  latestRun: Row["CardRun"] | undefined;
+}) {
+  const outputRef = useRef<HTMLDivElement>(null);
+  const steps = groupEventsIntoSteps(events);
+
+  const openStepFallback = stepFallbackStatus(latestRun?.status);
 
   useEffect(() => {
-    if (outputRef.current) {
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
-    }
+    const el = outputRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [events]);
+
+  if (steps.length === 0) {
+    return null;
+  }
 
   return (
     <div className="border-border flex min-h-0 flex-1 flex-col border-t">
-      <div className="flex items-center justify-between gap-2 px-4 py-3">
-        <span className="text-muted-foreground text-2xs font-medium tracking-wider whitespace-nowrap uppercase">
-          AI Run
-        </span>
-        <div className="flex items-center gap-2">
-          {latestRun && <RunStatusBadge status={latestRun.status} />}
-          {latestRun?.status === "completed" && latestRun.branchName && (
-            <Button asChild size="xs" variant="outline">
-              <a
-                href={`https://github.com/${repoOwner}/${repoName}/compare/${latestRun.branchName}?expand=1`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <GitBranchIcon weight="bold" />
-                {latestRun.branchName}
-              </a>
-            </Button>
-          )}
-          <Button
-            disabled={isBusy}
-            onClick={() => void startRun()}
-            size="xs"
-            variant="outline"
-          >
-            {isBusy ? (
-              <CircleNotchIcon className="animate-spin" />
-            ) : (
-              <PlayIcon weight="fill" />
-            )}
-            {buttonLabel}
-          </Button>
+      <div
+        className="min-h-0 flex-1 overflow-auto bg-black/2 dark:bg-white/2"
+        ref={outputRef}
+      >
+        <div className="space-y-0.5 px-4 py-3">
+          {steps.map((step, i) => (
+            <StepItem
+              key={i}
+              status={step.status ?? openStepFallback}
+              step={step}
+            />
+          ))}
         </div>
       </div>
-
-      {latestRun?.status === "failed" && latestRun.error && (
-        <RunErrorBanner error={latestRun.error} />
-      )}
-
-      {steps.length > 0 && (
-        <div
-          className="border-border min-h-0 flex-1 overflow-auto border-t bg-black/2 dark:bg-white/2"
-          ref={outputRef}
-        >
-          <div className="space-y-0.5 px-4 py-3">
-            {steps.map((step, i) => {
-              const isLast = i === steps.length - 1;
-              const stepStatus: StepStatus = !isLast
-                ? "completed"
-                : latestRun?.status === "failed"
-                  ? "failed"
-                  : isRunning
-                    ? "running"
-                    : "completed";
-
-              return <StepItem key={i} status={stepStatus} step={step} />;
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function groupEventsIntoSteps(events: RunOutputEvent[]): Step[] {
-  const steps: Step[] = [];
-  for (const event of events) {
-    if (event.type === "done") continue;
-    if (event.type === "status") {
-      steps.push({ label: event.text, messages: [] });
-    } else if (steps.length > 0) {
-      steps.at(-1)!.messages.push(event);
-    }
-  }
-  return steps;
-}
+function CardRunHeader({
+  isBusy,
+  isStarting,
+  latestRun,
+  onStartRun,
+}: {
+  isBusy: boolean;
+  isStarting: boolean;
+  latestRun: Row["CardRun"] | undefined;
+  onStartRun: () => void;
+}) {
+  const buttonLabel =
+    isStarting || latestRun?.status === "pending"
+      ? "Starting"
+      : latestRun?.status === "running"
+        ? "Running"
+        : "Run";
 
-function RunErrorBanner({ error }: { error: string }) {
   return (
-    <div className="border-border border-t px-4 py-3">
-      <Alert variant="destructive">
-        <WarningCircleIcon weight="fill" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+    <div className="flex items-center justify-between gap-2 px-4 py-3">
+      <span className="text-muted-foreground text-2xs font-medium tracking-wider whitespace-nowrap uppercase">
+        AI Run
+      </span>
+      <div className="flex items-center gap-2">
+        {latestRun && <RunStatusBadge status={latestRun.status} />}
+        {latestRun && <BranchLinkButton latestRun={latestRun} />}
+        <Button
+          disabled={isBusy}
+          onClick={onStartRun}
+          size="xs"
+          variant="outline"
+        >
+          {isBusy ? (
+            <CircleNotchIcon className="animate-spin" />
+          ) : (
+            <PlayIcon weight="fill" />
+          )}
+          {buttonLabel}
+        </Button>
+      </div>
     </div>
   );
+}
+
+function githubCompareUrl({
+  branch,
+  repoName,
+  repoOwner,
+}: {
+  branch: string;
+  repoName: string;
+  repoOwner: string;
+}): string {
+  return `https://github.com/${repoOwner}/${repoName}/compare/${branch}?expand=1`;
+}
+
+function stepFallbackStatus(runStatus: CardRunStatus | undefined): StepStatus {
+  if (runStatus === "completed") return "completed";
+  if (runStatus === "failed") return "failed";
+  return "running";
 }
 
 function StepItem({ status, step }: { status: StepStatus; step: Step }) {
   return (
     <div className="flex items-start gap-2 py-1">
-      <div className="mt-px shrink-0">
-        {status === "completed" && (
-          <CheckCircleIcon className="text-success size-3.5" weight="fill" />
-        )}
-        {status === "running" && (
-          <CircleNotchIcon className="text-primary size-3.5 animate-spin" />
-        )}
-        {status === "failed" && (
-          <WarningCircleIcon
-            className="text-destructive size-3.5"
-            weight="fill"
-          />
-        )}
+      <div className="shrink-0">
+        <StepStatusGlyph status={status} />
       </div>
       <div className="min-w-0 flex-1">
-        <p
+        <div
           className={cn(
             "text-xs",
             status === "completed" && "text-muted-foreground",
@@ -175,14 +201,14 @@ function StepItem({ status, step }: { status: StepStatus; step: Step }) {
           )}
         >
           {step.label}
-        </p>
+        </div>
         {step.messages.length > 0 && (
           <div className="mt-1.5 space-y-0.5">
             {step.messages.map((msg, i) => (
               <p
                 className={cn(
                   "text-xs leading-relaxed",
-                  msg.type === "assistant-text" && "text-foreground",
+                  msg.type === "text" && "text-foreground",
                   msg.type === "error" && "text-destructive",
                 )}
                 key={i}
@@ -197,12 +223,32 @@ function StepItem({ status, step }: { status: StepStatus; step: Step }) {
   );
 }
 
+function StepStatusGlyph({ status }: { status: StepStatus }) {
+  switch (status) {
+    case "completed":
+      return (
+        <CheckCircleIcon className="text-success size-3.5" weight="fill" />
+      );
+    case "failed":
+      return (
+        <WarningCircleIcon
+          className="text-destructive size-3.5"
+          weight="fill"
+        />
+      );
+    case "running":
+      return <CircleNotchIcon className="text-primary size-3.5 animate-spin" />;
+  }
+}
+
 function useStartCardRun(cardId: string, isRunning: boolean) {
   const [isStarting, setIsStarting] = useState(false);
 
-  if (isRunning && isStarting) {
-    setIsStarting(false);
-  }
+  useEffect(() => {
+    if (isRunning && isStarting) {
+      setIsStarting(false);
+    }
+  }, [isRunning, isStarting]);
 
   async function startRun() {
     setIsStarting(true);
@@ -226,30 +272,21 @@ function useStartCardRun(cardId: string, isRunning: boolean) {
   return { isStarting, startRun };
 }
 
-const STATUS_DOT_CLASSES: Record<CardRunStatus, string> = {
-  completed: "bg-success",
-  failed: "bg-destructive",
-  pending: "bg-muted-foreground animate-pulse",
-  running: "bg-primary animate-pulse",
-};
-
-const STATUS_LABELS: Record<CardRunStatus, string> = {
-  completed: "Completed",
-  failed: "Failed",
-  pending: "Pending",
-  running: "Running",
-};
+const RUN_STATUS_CONFIG: Record<CardRunStatus, { dot: string; label: string }> =
+  {
+    completed: { dot: "bg-success", label: "Completed" },
+    failed: { dot: "bg-destructive", label: "Failed" },
+    pending: { dot: "bg-muted-foreground animate-pulse", label: "Pending" },
+    running: { dot: "bg-primary animate-pulse", label: "Running" },
+  };
 
 function RunStatusBadge({ status }: { status: CardRunStatus }) {
+  const config = RUN_STATUS_CONFIG[status];
+
   return (
     <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
-      <span
-        className={cn(
-          "inline-block size-1.5 rounded-full",
-          STATUS_DOT_CLASSES[status],
-        )}
-      />
-      {STATUS_LABELS[status]}
+      <span className={cn("inline-block size-1.5 rounded-full", config.dot)} />
+      {config.label}
     </span>
   );
 }

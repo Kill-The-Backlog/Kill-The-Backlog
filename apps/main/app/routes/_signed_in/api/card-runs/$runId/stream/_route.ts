@@ -4,7 +4,7 @@ import { eventStream } from "remix-utils/sse/server";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { redis } from "#lib/.server/clients/redis.js";
-import { runOutputEventSchema } from "#lib/run-output.js";
+import { runOutputEventSchema } from "#lib/run-output/schemas.js";
 import { cardRunOutputKey } from "#workers/.server/card-run.js";
 
 import type { Route } from "./+types/_route.js";

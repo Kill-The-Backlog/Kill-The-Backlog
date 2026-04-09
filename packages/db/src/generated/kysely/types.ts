@@ -19,7 +19,6 @@ export type CardRun = {
   userId: number;
   status: Generated<CardRunStatus>;
   branchName: string | null;
-  error: string | null;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
