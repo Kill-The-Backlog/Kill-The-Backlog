@@ -10,14 +10,21 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { PlusIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useQuery, useZero } from "@rocicorp/zero/react";
 import { generateKeyBetween } from "fractional-indexing";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, useParams } from "react-router";
 import invariant from "tiny-invariant";
 
 import { Button } from "#components/ui/button.js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#components/ui/dropdown-menu.js";
 import { cn } from "#lib/utils.js";
 import { mutators } from "#zero/mutators.js";
 import { queries } from "#zero/queries.js";
@@ -203,6 +210,7 @@ function parseCardDragData(data: Record<string, unknown>): CardDragData {
 }
 
 const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
+  const zero = useZero();
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
@@ -261,21 +269,47 @@ const KanbanCard = memo(function KanbanCard({ card }: { card: KanbanCardRow }) {
   }, [card.id, card.columnId]);
 
   return (
-    <div
-      className="relative cursor-grab py-[3px] select-none active:cursor-grabbing"
-      ref={ref}
-    >
+    <div className="relative py-[3px] select-none">
       {closestEdge === "top" && <DropEdgeIndicator edge="top" />}
-      <Link
-        className={cn(
-          "bg-card border-border block rounded-md border px-3 py-2 text-xs wrap-break-word shadow-xs",
-          isDragging && "opacity-50",
-        )}
-        draggable={false}
-        to={`/${repoOwner}/${repoName}/c/${card.number}`}
-      >
-        {card.title}
-      </Link>
+      <div className="group/card relative" ref={ref}>
+        <Link
+          className={cn(
+            "bg-card border-border relative block rounded-md border px-3 py-2 pr-8 text-xs wrap-break-word shadow-xs",
+            isDragging && "opacity-50",
+          )}
+          draggable={false}
+          to={`/${repoOwner}/${repoName}/c/${card.number}`}
+        >
+          {card.title}
+        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              className="absolute top-1 right-1 opacity-0 transition-opacity group-hover/card:opacity-100 group-has-focus-visible/card:opacity-100 data-[state=open]:opacity-100"
+              size="icon-xs"
+              variant="ghost"
+            >
+              <DotsThreeIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="center"
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <DropdownMenuItem
+              onSelect={() => {
+                zero.mutate(mutators.kanbanCards.delete({ id: card.id }));
+              }}
+              variant="destructive"
+            >
+              <TrashIcon />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       {closestEdge === "bottom" && <DropEdgeIndicator edge="bottom" />}
     </div>
   );
