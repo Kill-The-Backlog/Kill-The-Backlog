@@ -112,6 +112,7 @@ async function handleCardRun(job: Job<CardRunJobData>): Promise<undefined> {
         onStdout: (data) => {
           parser.feed(data);
         },
+        timeoutMs: 0,
       },
     );
 
