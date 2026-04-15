@@ -11,14 +11,19 @@ export const createSandboxWorker = defineWorker<JobData>(
   async (job) => {
     const { sessionId } = job.data;
 
-    const sandbox = await Sandbox.create({
-      apiKey: serverEnv.E2B_API_KEY,
-    });
+    let sandbox: Sandbox | undefined;
+    try {
+      sandbox = await Sandbox.create({
+        apiKey: serverEnv.E2B_API_KEY,
+      });
 
-    await db
-      .updateTable("Session")
-      .set({ e2bSandboxId: sandbox.sandboxId, updatedAt: new Date() })
-      .where("id", "=", sessionId)
-      .execute();
+      await db
+        .updateTable("Session")
+        .set({ e2bSandboxId: sandbox.sandboxId, updatedAt: new Date() })
+        .where("id", "=", sessionId)
+        .execute();
+    } finally {
+      await sandbox?.kill();
+    }
   },
 );
