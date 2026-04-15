@@ -35,44 +35,14 @@ export const gitHubAccountTable = table("GitHubAccount")
   })
   .primaryKey("id");
 
-export const gitHubRepoTable = table("GitHubRepo")
-  .columns({
-    id: number(),
-    userId: number(),
-    githubRepoId: number(),
-    name: string(),
-    fullName: string(),
-    ownerLogin: string(),
-    ownerAvatarUrl: string().optional(),
-    description: string().optional(),
-    htmlUrl: string(),
-    isPrivate: boolean(),
-    defaultBranch: string(),
-    createdAt: number(),
-    updatedAt: number(),
-  })
-  .primaryKey("id");
-
-export const userTableRelationships = relationships(userTable, ({ one, many }) => ({
+export const userTableRelationships = relationships(userTable, ({ one }) => ({
   githubAccount: one({
     sourceField: ["id"],
     destField: ["userId"],
     destSchema: gitHubAccountTable,
-  }),
-  githubRepos: many({
-    sourceField: ["id"],
-    destField: ["userId"],
-    destSchema: gitHubRepoTable,
   })
 }));
 export const gitHubAccountTableRelationships = relationships(gitHubAccountTable, ({ one }) => ({
-  user: one({
-    sourceField: ["userId"],
-    destField: ["id"],
-    destSchema: userTable,
-  })
-}));
-export const gitHubRepoTableRelationships = relationships(gitHubRepoTable, ({ one }) => ({
   user: one({
     sourceField: ["userId"],
     destField: ["id"],
@@ -87,12 +57,10 @@ export const schema = createSchema({
   tables: [
     userTable,
     gitHubAccountTable,
-    gitHubRepoTable,
   ],
   relationships: [
     userTableRelationships,
     gitHubAccountTableRelationships,
-    gitHubRepoTableRelationships,
   ],
 });
 

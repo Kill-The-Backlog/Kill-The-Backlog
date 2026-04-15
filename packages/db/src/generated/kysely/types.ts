@@ -14,21 +14,6 @@ export type GitHubAccount = {
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
-export type GitHubRepo = {
-  id: Generated<number>;
-  userId: number;
-  githubRepoId: number;
-  name: string;
-  fullName: string;
-  ownerLogin: string;
-  ownerAvatarUrl: string | null;
-  description: string | null;
-  htmlUrl: string;
-  isPrivate: boolean;
-  defaultBranch: string;
-  createdAt: Generated<Timestamp>;
-  updatedAt: Timestamp;
-};
 export type User = {
   id: Generated<number>;
   email: string;
@@ -40,6 +25,5 @@ export type User = {
 };
 export type DB = {
   GitHubAccount: GitHubAccount;
-  GitHubRepo: GitHubRepo;
   User: User;
 };

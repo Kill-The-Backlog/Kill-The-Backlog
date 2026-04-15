@@ -1,19 +1,18 @@
-import { SignOutIcon, SwordIcon } from "@phosphor-icons/react";
+import type { Selectable } from "@ktb/db/kysely-types";
+import type { User } from "@ktb/db/types";
+
+import {
+  CaretUpDownIcon,
+  GitBranchIcon,
+  SignOutIcon,
+  SwordIcon,
+  TimerIcon,
+} from "@phosphor-icons/react";
 import { useZero } from "@rocicorp/zero/react";
-import { Fragment } from "react";
-import { Link, Outlet, useMatches, useNavigate } from "react-router";
+import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "#components/ui/breadcrumb.js";
-import { Button } from "#components/ui/button.js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,84 +21,105 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu.js";
-import { hasBreadcrumbHandle } from "#lib/route-handle.js";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "#components/ui/sidebar.js";
 import { getInitials } from "#lib/utils.js";
 import { useRootLoaderData } from "#root.js";
-import { ZeroProvider } from "#zero/zero-provider.js";
+
+const NAV_ITEMS = [
+  { icon: TimerIcon, label: "Sessions", to: "/sessions" },
+] as const;
 
 export default function Route() {
-  const { env, user } = useRootLoaderData();
-  invariant(user, "User is required");
-
   return (
-    <ZeroProvider cacheURL={env.ZERO_CACHE_URL} userId={user.id}>
-      <div className="flex h-full flex-col">
-        <Nav />
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="border-border flex h-12 items-center gap-2 border-b px-3">
+          <SidebarTrigger />
+        </header>
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
-      </div>
-    </ZeroProvider>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
-function Nav() {
+function AppSidebar() {
   return (
-    <header className="border-border z-50 flex h-12 items-center border-b px-3">
-      <NavBreadcrumbs />
-      <UserMenu />
-    </header>
-  );
-}
-
-function NavBreadcrumbs() {
-  const matches = useMatches();
-  const breadcrumbs = matches.flatMap((m) =>
-    hasBreadcrumbHandle(m.handle) ? [m.handle.breadcrumb(m.loaderData)] : [],
-  );
-
-  return (
-    <div className="flex items-center gap-2">
-      <Button
-        asChild
-        className="rounded-md max-sm:size-8 max-sm:p-0"
-        draggable={false}
-        variant="ghost"
-      >
-        <Link to="/">
-          <SwordIcon className="text-primary size-5" weight="fill" />
-          <span className="hidden text-xs font-semibold tracking-tight sm:inline">
-            Kill The Backlog
-          </span>
-        </Link>
-      </Button>
-
-      {breadcrumbs.length > 0 && (
-        <Breadcrumb>
-          <BreadcrumbList>
-            {breadcrumbs.map((crumb, i) => {
-              const isLast = i === breadcrumbs.length - 1;
-              return (
-                <Fragment key={i}>
-                  {i > 0 && <BreadcrumbSeparator />}
-                  <BreadcrumbItem>
-                    {isLast ? (
-                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink asChild>
-                        <Link draggable={false} to={crumb.to}>
-                          {crumb.label}
-                        </Link>
-                      </BreadcrumbLink>
+    <Sidebar>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg">
+              <Link draggable={false} to="/">
+                <SwordIcon className="text-primary" weight="fill" />
+                <span className="font-heading text-xs font-semibold tracking-tight">
+                  Kill The Backlog
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {NAV_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.to}>
+                  <NavLink draggable={false} to={item.to}>
+                    {({ isActive }) => (
+                      <SidebarMenuButton isActive={isActive}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
                     )}
-                  </BreadcrumbItem>
-                </Fragment>
-              );
-            })}
-          </BreadcrumbList>
-        </Breadcrumb>
-      )}
-    </div>
+                  </NavLink>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <UserMenu />
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
+
+function UserInfo({
+  user,
+}: {
+  user: Pick<Selectable<User>, "avatarUrl" | "displayName" | "email">;
+}) {
+  return (
+    <>
+      <Avatar size="sm">
+        <AvatarImage alt={user.displayName} src={user.avatarUrl ?? undefined} />
+        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+      </Avatar>
+      <div className="grid flex-1 text-left text-xs leading-tight">
+        <span className="truncate font-medium">{user.displayName}</span>
+        <span className="text-muted-foreground text-2xs truncate">
+          {user.email}
+        </span>
+      </div>
+    </>
   );
 }
 
@@ -116,35 +136,45 @@ function UserMenu() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button className="ml-auto rounded-full" size="icon-sm" variant="ghost">
-          <Avatar size="sm">
-            <AvatarImage
-              alt={user.displayName}
-              src={user.avatarUrl ?? undefined}
-            />
-            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>
-          <div className="flex flex-col">
-            <span className="font-medium">{user.displayName}</span>
-            <span className="text-muted-foreground font-normal">
-              {user.email}
-            </span>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link onClick={handleSignOut} to="/sign-out">
-            <SignOutIcon />
-            Sign out
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              size="lg"
+            >
+              <UserInfo user={user} />
+              <CaretUpDownIcon className="ml-auto size-4" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+            side="top"
+          >
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-xs">
+                <UserInfo user={user} />
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link draggable={false} to="/repos">
+                <GitBranchIcon />
+                Repos
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link draggable={false} onClick={handleSignOut} to="/sign-out">
+                <SignOutIcon />
+                Sign out
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }

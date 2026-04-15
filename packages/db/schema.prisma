@@ -21,7 +21,6 @@ model User {
   avatarUrl     String?
   isStaff       Boolean        @default(false)
   githubAccount GitHubAccount?
-  githubRepos   GitHubRepo[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -35,23 +34,4 @@ model GitHubAccount {
   oauthAccessToken String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-}
-
-model GitHubRepo {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  githubRepoId   Int
-  name           String
-  fullName       String
-  ownerLogin     String
-  ownerAvatarUrl String?
-  description    String?
-  htmlUrl        String
-  isPrivate      Boolean
-  defaultBranch  String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@unique([userId, githubRepoId])
 }
