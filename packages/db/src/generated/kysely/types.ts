@@ -18,6 +18,7 @@ export type Session = {
   id: string;
   userId: number;
   prompt: string;
+  e2bSandboxId: string | null;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };

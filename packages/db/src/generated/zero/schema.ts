@@ -40,6 +40,7 @@ export const sessionTable = table("Session")
     id: string(),
     userId: number(),
     prompt: string(),
+    e2bSandboxId: string().optional(),
     createdAt: number(),
     updatedAt: number(),
   })

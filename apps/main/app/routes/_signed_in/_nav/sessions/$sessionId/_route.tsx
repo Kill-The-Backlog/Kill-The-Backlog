@@ -1,36 +1,36 @@
-import { data } from "react-router";
-import invariant from "tiny-invariant";
+import { useQuery } from "@rocicorp/zero/react";
+import { Navigate } from "react-router";
 
-import { requireUser } from "#lib/.server/auth/auth-context.js";
-import { db } from "#lib/.server/clients/db.js";
+import { Spinner } from "#components/ui/spinner.js";
+import { queries } from "#zero/queries.js";
 
 import type { Route } from "./+types/_route";
 
-export const loader = async ({ context, params }: Route.LoaderArgs) => {
-  const { user } = await requireUser(context);
-  const sessionId = params.sessionId;
-  invariant(sessionId, "Session ID is required");
+export default function Route({ params }: Route.ComponentProps) {
+  const [session, sessionResult] = useQuery(
+    queries.sessions.one({ id: params.sessionId }),
+  );
 
-  const session = await db
-    .selectFrom("Session")
-    .select(["id", "prompt", "createdAt"])
-    .where("id", "=", sessionId)
-    .where("userId", "=", user.id)
-    .executeTakeFirst();
-
-  if (!session) {
-    throw data({ error: "Session not found" }, { status: 404 });
+  if (!session && sessionResult.type === "complete") {
+    return <Navigate replace to="/sessions" />;
   }
 
-  return { session };
-};
-
-export default function Route({ loaderData }: Route.ComponentProps) {
-  const { session } = loaderData;
+  if (!session) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
       <p className="text-muted-foreground text-sm">{session.prompt}</p>
+      {session.e2bSandboxId && (
+        <p className="text-muted-foreground text-sm">
+          Sandbox ID: {session.e2bSandboxId}
+        </p>
+      )}
     </div>
   );
 }

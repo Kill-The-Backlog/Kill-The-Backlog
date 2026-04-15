@@ -52,7 +52,7 @@ type MakeWorkerOptions = {
 
 export const defineWorker = <
   JobData,
-  JobResult,
+  JobResult = void,
   QueueName extends string = string,
 >(
   name: QueueName,

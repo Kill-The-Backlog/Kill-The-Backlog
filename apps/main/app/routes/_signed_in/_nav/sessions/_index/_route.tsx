@@ -8,6 +8,7 @@ import { Button } from "#components/ui/button.js";
 import { Input } from "#components/ui/input.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
+import { createSandboxWorker } from "#workers/.server/create-sandbox.js";
 
 import type { Route } from "./+types/_route";
 
@@ -37,6 +38,11 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
     })
     .returning("id")
     .executeTakeFirstOrThrow();
+
+  await createSandboxWorker.enqueue(
+    { sessionId: session.id },
+    { jobId: session.id },
+  );
 
   throw redirect(`/sessions/${session.id}`);
 };

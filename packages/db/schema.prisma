@@ -38,10 +38,11 @@ model GitHubAccount {
 }
 
 model Session {
-  id        String   @id @default(uuid())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  prompt    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt        String
+  e2bSandboxId  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
