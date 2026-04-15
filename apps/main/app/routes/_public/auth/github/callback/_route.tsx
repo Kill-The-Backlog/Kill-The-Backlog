@@ -24,7 +24,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const user = await upsertUserWithGitHubAccount(profile, accessToken);
 
   session.set("userId", user.id);
-  return redirect("/repos");
+  return redirect("/");
 };
 
 function extractOAuthCode(

@@ -129,7 +129,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
             {isNotFound ? (
               <Button asChild size="lg">
-                <Link to="/repos">
+                <Link to="/">
                   <ArrowLeftIcon />
                   Back to Kill The Backlog
                 </Link>

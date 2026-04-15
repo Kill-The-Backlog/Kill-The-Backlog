@@ -1,3 +1,3 @@
 import { redirect } from "react-router";
 
-export const loader = async () => redirect("/agents");
+export const loader = async () => redirect("/sessions");
