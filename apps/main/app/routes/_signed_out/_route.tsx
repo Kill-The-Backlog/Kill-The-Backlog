@@ -11,7 +11,7 @@ import type { Route } from "./+types/_route";
 export const loader = async ({ context }: Route.LoaderArgs) => {
   const result = await getUser(context);
 
-  if (result) return redirect("/");
+  if (result) return redirect("/agents");
 
   // Clear stale session if userId was set but user wasn't found.
   const session = getSession(context);

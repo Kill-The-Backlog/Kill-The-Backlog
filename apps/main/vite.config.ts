@@ -12,12 +12,6 @@ export default defineConfig(({ isSsrBuild }) => ({
       protocol: "ws",
     },
   },
-  ssr: {
-    noExternal: [
-      "@atlaskit/pragmatic-drag-and-drop",
-      "@atlaskit/pragmatic-drag-and-drop-hitbox",
-    ],
-  },
   ...(isSsrBuild
     ? {
         build: {

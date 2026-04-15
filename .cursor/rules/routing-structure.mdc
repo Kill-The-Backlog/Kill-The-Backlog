@@ -14,10 +14,10 @@ Use **directory nesting** (not dot notation) for multi-segment route paths:
 
 ```
 # ✅ GOOD — directory nesting
-repos/$repoId/cards/$cardId/_route.tsx
+$parentId/children/$childId/_route.tsx
 
 # ❌ BAD — dot notation for segments
-repos/$repoId/cards.$cardId/_route.tsx
+$parentId/children.$childId/_route.tsx
 ```
 
-Both produce the same URL (`/repos/:repoId/cards/:cardId`), but directory nesting is the project convention.
+Both produce the same URL (`/:parentId/children/:childId`), but directory nesting is the project convention.

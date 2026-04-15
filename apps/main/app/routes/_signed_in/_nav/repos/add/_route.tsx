@@ -141,7 +141,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
         <Button asChild size="icon" variant="ghost">
-          <Link to="/">
+          <Link to="/repos">
             <ArrowLeftIcon />
           </Link>
         </Button>

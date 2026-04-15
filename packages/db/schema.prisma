@@ -22,8 +22,6 @@ model User {
   isStaff       Boolean        @default(false)
   githubAccount GitHubAccount?
   githubRepos   GitHubRepo[]
-  kanbanCards   KanbanCard[]
-  cardRuns      CardRun[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -40,9 +38,9 @@ model GitHubAccount {
 }
 
 model GitHubRepo {
-  id             Int          @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   userId         Int
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   githubRepoId   Int
   name           String
   fullName       String
@@ -52,48 +50,8 @@ model GitHubRepo {
   htmlUrl        String
   isPrivate      Boolean
   defaultBranch  String
-  kanbanCards    KanbanCard[]
-  cardRuns       CardRun[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([userId, githubRepoId])
-}
-
-model KanbanCard {
-  id        String     @id @db.Uuid
-  repoId    Int
-  repo      GitHubRepo @relation(fields: [repoId], references: [id], onDelete: Cascade)
-  userId    Int
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  number    Int
-  title     String
-  columnId  String
-  sortOrder String
-  cardRuns  CardRun[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  @@unique([repoId, number])
-}
-
-enum CardRunStatus {
-  pending
-  running
-  completed
-  failed
-}
-
-model CardRun {
-  id         String        @id @db.Uuid
-  cardId     String        @db.Uuid
-  card       KanbanCard    @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  repoId     Int
-  repo       GitHubRepo    @relation(fields: [repoId], references: [id], onDelete: Cascade)
-  userId     Int
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status     CardRunStatus @default(pending)
-  branchName String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
 }

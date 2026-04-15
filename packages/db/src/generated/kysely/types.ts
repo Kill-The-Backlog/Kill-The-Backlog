@@ -5,23 +5,6 @@ export type Generated<T> =
     : ColumnType<T, T | undefined, T>;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
-export const CardRunStatus = {
-  pending: "pending",
-  running: "running",
-  completed: "completed",
-  failed: "failed",
-} as const;
-export type CardRunStatus = (typeof CardRunStatus)[keyof typeof CardRunStatus];
-export type CardRun = {
-  id: string;
-  cardId: string;
-  repoId: number;
-  userId: number;
-  status: Generated<CardRunStatus>;
-  branchName: string | null;
-  createdAt: Generated<Timestamp>;
-  updatedAt: Timestamp;
-};
 export type GitHubAccount = {
   id: Generated<number>;
   userId: number;
@@ -46,17 +29,6 @@ export type GitHubRepo = {
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
-export type KanbanCard = {
-  id: string;
-  repoId: number;
-  userId: number;
-  number: number;
-  title: string;
-  columnId: string;
-  sortOrder: string;
-  createdAt: Generated<Timestamp>;
-  updatedAt: Timestamp;
-};
 export type User = {
   id: Generated<number>;
   email: string;
@@ -67,9 +39,7 @@ export type User = {
   updatedAt: Timestamp;
 };
 export type DB = {
-  CardRun: CardRun;
   GitHubAccount: GitHubAccount;
   GitHubRepo: GitHubRepo;
-  KanbanCard: KanbanCard;
   User: User;
 };

@@ -4,8 +4,6 @@ import { Fragment } from "react";
 import { Link, Outlet, useMatches, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
-import type { BreadcrumbHandle } from "#lib/route-handle.js";
-
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
 import {
   Breadcrumb,
@@ -28,10 +26,6 @@ import { hasBreadcrumbHandle } from "#lib/route-handle.js";
 import { getInitials } from "#lib/utils.js";
 import { useRootLoaderData } from "#root.js";
 import { ZeroProvider } from "#zero/zero-provider.js";
-
-export const handle: BreadcrumbHandle = {
-  breadcrumb: () => ({ label: "Repos", to: "/" }),
-};
 
 export default function Route() {
   const { env, user } = useRootLoaderData();
