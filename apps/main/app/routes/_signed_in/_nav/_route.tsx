@@ -6,9 +6,8 @@ import {
   GitBranchIcon,
   SignOutIcon,
   SwordIcon,
-  TimerIcon,
 } from "@phosphor-icons/react";
-import { useZero } from "@rocicorp/zero/react";
+import { useQuery, useZero } from "@rocicorp/zero/react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
@@ -27,6 +26,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -37,10 +37,7 @@ import {
 } from "#components/ui/sidebar.js";
 import { getInitials } from "#lib/utils.js";
 import { useRootLoaderData } from "#root.js";
-
-const NAV_ITEMS = [
-  { icon: TimerIcon, label: "Sessions", to: "/sessions" },
-] as const;
+import { queries } from "#zero/queries.js";
 
 export default function Route() {
   return (
@@ -76,29 +73,41 @@ function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {NAV_ITEMS.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <NavLink draggable={false} to={item.to}>
-                    {({ isActive }) => (
-                      <SidebarMenuButton isActive={isActive}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    )}
-                  </NavLink>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <SessionList />
       </SidebarContent>
       <SidebarFooter>
         <UserMenu />
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+function SessionList() {
+  const [sessions] = useQuery(queries.sessions.mine());
+
+  if (sessions.length === 0) {
+    return null;
+  }
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Recent</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {sessions.map((session) => (
+            <SidebarMenuItem key={session.id}>
+              <NavLink draggable={false} to={`/sessions/${session.id}`}>
+                {({ isActive }) => (
+                  <SidebarMenuButton isActive={isActive}>
+                    <span className="truncate">{session.prompt}</span>
+                  </SidebarMenuButton>
+                )}
+              </NavLink>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }
 
