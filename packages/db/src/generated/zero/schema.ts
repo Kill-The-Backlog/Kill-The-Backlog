@@ -35,14 +35,36 @@ export const gitHubAccountTable = table("GitHubAccount")
   })
   .primaryKey("id");
 
-export const userTableRelationships = relationships(userTable, ({ one }) => ({
+export const sessionTable = table("Session")
+  .columns({
+    id: string(),
+    userId: number(),
+    prompt: string(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey("id");
+
+export const userTableRelationships = relationships(userTable, ({ one, many }) => ({
   githubAccount: one({
     sourceField: ["id"],
     destField: ["userId"],
     destSchema: gitHubAccountTable,
+  }),
+  sessions: many({
+    sourceField: ["id"],
+    destField: ["userId"],
+    destSchema: sessionTable,
   })
 }));
 export const gitHubAccountTableRelationships = relationships(gitHubAccountTable, ({ one }) => ({
+  user: one({
+    sourceField: ["userId"],
+    destField: ["id"],
+    destSchema: userTable,
+  })
+}));
+export const sessionTableRelationships = relationships(sessionTable, ({ one }) => ({
   user: one({
     sourceField: ["userId"],
     destField: ["id"],
@@ -57,10 +79,12 @@ export const schema = createSchema({
   tables: [
     userTable,
     gitHubAccountTable,
+    sessionTable,
   ],
   relationships: [
     userTableRelationships,
     gitHubAccountTableRelationships,
+    sessionTableRelationships,
   ],
 });
 

@@ -14,6 +14,13 @@ export type GitHubAccount = {
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
+export type Session = {
+  id: string;
+  userId: number;
+  prompt: string;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
 export type User = {
   id: Generated<number>;
   email: string;
@@ -25,5 +32,6 @@ export type User = {
 };
 export type DB = {
   GitHubAccount: GitHubAccount;
+  Session: Session;
   User: User;
 };
