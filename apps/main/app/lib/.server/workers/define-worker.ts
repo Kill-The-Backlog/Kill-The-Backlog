@@ -171,7 +171,7 @@ export const defineWorker = <
 
   return {
     // Cast needed due to BullMQ's ExtractNameType/ExtractDataType inference
-    bullQueue: queue as unknown as BullQueue<JobData, JobResult, QueueName>,
+    bullQueue: queue as BullQueue<JobData, JobResult, QueueName>,
     bullWorker: worker,
     enqueue,
     getJobStatus,
