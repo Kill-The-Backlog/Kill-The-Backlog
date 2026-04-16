@@ -43,6 +43,32 @@ model Session {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   prompt        String
   e2bSandboxId  String?
+  todos         Json?
+  summary       Json?
+  errorMessage  String?
+  messages      SessionMessage[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model SessionMessage {
+  id         String               @id @default(uuid())
+  opencodeId String               @unique
+  sessionId  String
+  session    Session              @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role       String
+  parts      SessionMessagePart[]
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+}
+
+model SessionMessagePart {
+  id         String         @id @default(uuid())
+  opencodeId String         @unique
+  messageId  String
+  message    SessionMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  type       String
+  data       Json
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }

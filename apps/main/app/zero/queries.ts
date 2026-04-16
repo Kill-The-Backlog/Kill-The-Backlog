@@ -10,7 +10,14 @@ export const queries = defineQueries({
       zql.Session.where("userId", ctx.userId).orderBy("createdAt", "desc"),
     ),
     one: defineQuery(z.object({ id: z.string() }), ({ args: { id }, ctx }) =>
-      zql.Session.where("id", id).where("userId", ctx.userId).one(),
+      zql.Session.where("id", id)
+        .where("userId", ctx.userId)
+        .related("messages", (m) =>
+          m
+            .related("parts", (p) => p.orderBy("createdAt", "asc"))
+            .orderBy("createdAt", "asc"),
+        )
+        .one(),
     ),
   },
 });

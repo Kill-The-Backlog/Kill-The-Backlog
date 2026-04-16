@@ -8,7 +8,7 @@ import { Button } from "#components/ui/button.js";
 import { Input } from "#components/ui/input.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { createSandboxWorker } from "#workers/.server/create-sandbox.js";
+import { createSandboxWorker } from "#workers/.server/create-sandbox/index.js";
 
 import type { Route } from "./+types/_route";
 

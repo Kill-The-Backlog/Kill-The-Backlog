@@ -22,6 +22,10 @@
     "./kysely-types": {
       "types": "./src/kysely-types.ts",
       "default": "./build/kysely-types.js"
+    },
+    "./kysely-helpers": {
+      "types": "./src/kysely-helpers.ts",
+      "default": "./build/kysely-helpers.js"
     }
   },
   "files": [

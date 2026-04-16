@@ -19,6 +19,26 @@ export type Session = {
   userId: number;
   prompt: string;
   e2bSandboxId: string | null;
+  todos: unknown | null;
+  summary: unknown | null;
+  errorMessage: string | null;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
+export type SessionMessage = {
+  id: string;
+  opencodeId: string;
+  sessionId: string;
+  role: string;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
+export type SessionMessagePart = {
+  id: string;
+  opencodeId: string;
+  messageId: string;
+  type: string;
+  data: unknown;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
@@ -34,5 +54,7 @@ export type User = {
 export type DB = {
   GitHubAccount: GitHubAccount;
   Session: Session;
+  SessionMessage: SessionMessage;
+  SessionMessagePart: SessionMessagePart;
   User: User;
 };

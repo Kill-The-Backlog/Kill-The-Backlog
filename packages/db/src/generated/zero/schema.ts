@@ -5,6 +5,7 @@ import {
   boolean,
   createBuilder,
   createSchema,
+  json,
   number,
   relationships,
   string,
@@ -41,6 +42,32 @@ export const sessionTable = table("Session")
     userId: number(),
     prompt: string(),
     e2bSandboxId: string().optional(),
+    todos: json().optional(),
+    summary: json().optional(),
+    errorMessage: string().optional(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey("id");
+
+export const sessionMessageTable = table("SessionMessage")
+  .columns({
+    id: string(),
+    opencodeId: string(),
+    sessionId: string(),
+    role: string(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey("id");
+
+export const sessionMessagePartTable = table("SessionMessagePart")
+  .columns({
+    id: string(),
+    opencodeId: string(),
+    messageId: string(),
+    type: string(),
+    data: json(),
     createdAt: number(),
     updatedAt: number(),
   })
@@ -65,11 +92,35 @@ export const gitHubAccountTableRelationships = relationships(gitHubAccountTable,
     destSchema: userTable,
   })
 }));
-export const sessionTableRelationships = relationships(sessionTable, ({ one }) => ({
+export const sessionTableRelationships = relationships(sessionTable, ({ one, many }) => ({
   user: one({
     sourceField: ["userId"],
     destField: ["id"],
     destSchema: userTable,
+  }),
+  messages: many({
+    sourceField: ["id"],
+    destField: ["sessionId"],
+    destSchema: sessionMessageTable,
+  })
+}));
+export const sessionMessageTableRelationships = relationships(sessionMessageTable, ({ one, many }) => ({
+  session: one({
+    sourceField: ["sessionId"],
+    destField: ["id"],
+    destSchema: sessionTable,
+  }),
+  parts: many({
+    sourceField: ["id"],
+    destField: ["messageId"],
+    destSchema: sessionMessagePartTable,
+  })
+}));
+export const sessionMessagePartTableRelationships = relationships(sessionMessagePartTable, ({ one }) => ({
+  message: one({
+    sourceField: ["messageId"],
+    destField: ["id"],
+    destSchema: sessionMessageTable,
   })
 }));
 /**
@@ -81,11 +132,15 @@ export const schema = createSchema({
     userTable,
     gitHubAccountTable,
     sessionTable,
+    sessionMessageTable,
+    sessionMessagePartTable,
   ],
   relationships: [
     userTableRelationships,
     gitHubAccountTableRelationships,
     sessionTableRelationships,
+    sessionMessageTableRelationships,
+    sessionMessagePartTableRelationships,
   ],
 });
 
