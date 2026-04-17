@@ -1,3 +1,5 @@
+import type { Job } from "bullmq";
+
 import { db } from "#lib/.server/clients/db.js";
 import { defineWorker } from "#lib/.server/workers/define-worker.js";
 
@@ -24,6 +26,7 @@ export const sandboxSupervisorWorker = defineWorker<JobData>(
     const signal = abortController.signal;
 
     let sandboxRef: EnsuredSandbox | undefined;
+    let errored = false;
 
     const notifications = await subscribeToSessionNotifications(
       sessionId,
@@ -31,13 +34,19 @@ export const sandboxSupervisorWorker = defineWorker<JobData>(
     );
 
     try {
-      const tracker = createIdleTracker();
-
       sandboxRef = await ensureSandbox({ job, sessionId });
       const { client, opencodeSessionId } = sandboxRef;
 
+      // Create the tracker after ensureSandbox so its seeded idle timestamp
+      // reflects when the sandbox actually became ready, not when the job
+      // started — a slow cold start shouldn't eat into the grace window.
+      const tracker = createIdleTracker();
+
       // Start the event pump in the background; it writes DB state reactively
-      // and feeds the idle tracker. Pump exits when signal aborts.
+      // and feeds the idle tracker. Pump exits when signal aborts. On failure
+      // we abort the shared controller so the command loop doesn't hang
+      // waiting for events that will never arrive; the real error is
+      // re-surfaced when the inner finally awaits pumpPromise below.
       const pumpPromise = runEventPump({
         client,
         job,
@@ -45,6 +54,9 @@ export const sandboxSupervisorWorker = defineWorker<JobData>(
         sessionId,
         signal,
         tracker,
+      }).catch((error: unknown) => {
+        abortController.abort();
+        throw error;
       });
 
       try {
@@ -65,6 +77,7 @@ export const sandboxSupervisorWorker = defineWorker<JobData>(
         await pumpPromise;
       }
     } catch (error) {
+      errored = true;
       await queryMarkSandboxStatus({
         errorMessage: formatError(error),
         sandboxStatus: "errored",
@@ -82,7 +95,7 @@ export const sandboxSupervisorWorker = defineWorker<JobData>(
         await job.log(`Notify close error: ${formatError(error)}`);
       }
 
-      await pauseSandbox({ sandboxRef, sessionId });
+      await pauseSandbox({ errored, job, sandboxRef, sessionId });
     }
   },
   {
@@ -116,10 +129,20 @@ sandboxSupervisorWorker.bullWorker.on("completed", (job) => {
 // itself is healthy, so snapshotting is safe. If the sandbox is genuinely
 // broken and pause fails, ensureSandbox's resume → provision fallback will
 // re-provision on the next command.
+//
+// When `errored` is true we still attempt the pause (to preserve the
+// snapshot), but skip every sandboxStatus write so the row keeps the
+// supervisor's original errored status + errorMessage. A pause failure in
+// that path is logged rather than written, to avoid clobbering the more
+// informative upstream error.
 async function pauseSandbox({
+  errored,
+  job,
   sandboxRef,
   sessionId,
 }: {
+  errored: boolean;
+  job: Job;
   sandboxRef: EnsuredSandbox | undefined;
   sessionId: string;
 }): Promise<void> {
@@ -127,11 +150,21 @@ async function pauseSandbox({
 
   const { sandbox } = sandboxRef;
 
-  await queryMarkSandboxStatus({ sandboxStatus: "pausing", sessionId });
+  if (!errored) {
+    await queryMarkSandboxStatus({ sandboxStatus: "pausing", sessionId });
+  }
   try {
     await sandbox.pause();
-    await queryMarkSandboxStatus({ sandboxStatus: "paused", sessionId });
+    if (!errored) {
+      await queryMarkSandboxStatus({ sandboxStatus: "paused", sessionId });
+    }
   } catch (error) {
+    if (errored) {
+      await job.log(
+        `Pause failed during error cleanup: ${formatError(error)}`,
+      );
+      return;
+    }
     await queryMarkSandboxStatus({
       errorMessage: `Pause failed: ${formatError(error)}`,
       sandboxStatus: "errored",

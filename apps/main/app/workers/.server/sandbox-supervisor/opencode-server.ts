@@ -15,9 +15,11 @@ export async function startOpencodeServer(
   sandbox: Sandbox,
   job: Job,
 ): Promise<string> {
+  // Detach from envd so opencode survives E2B pause: envd kills its tracked
+  // children (including `{ background: true }` commands) on pause, but a
+  // detached shell job is orphaned to init and left alone.
   await sandbox.commands.run(
-    `opencode serve --hostname 0.0.0.0 --port ${OPENCODE_PORT}`,
-    { background: true },
+    `opencode serve --hostname 0.0.0.0 --port ${OPENCODE_PORT} > /tmp/opencode.log 2>&1 < /dev/null &`,
   );
 
   // @todo: this url isn't guessable, but should be secured

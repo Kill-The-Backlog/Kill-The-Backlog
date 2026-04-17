@@ -23,36 +23,35 @@ export async function runEventPump({
   signal: AbortSignal;
   tracker: IdleTracker;
 }): Promise<void> {
-  const { stream } = await client.event.subscribe();
+  // Pass the signal down so the SDK's fetch + SSE reader can be aborted
+  // mid-read. Without this, stream.return() only queues a return but cannot
+  // unblock the pending `await reader.read()`, so the for-await (and the
+  // supervisor's pumpPromise await) hangs until the next SSE chunk arrives.
+  //
+  // The SDK's generator catches the abort internally (it retries by design),
+  // then observes signal.aborted at the top of its retry loop and breaks
+  // cleanly — so no try/catch is needed around the for-await here.
+  const { stream } = await client.event.subscribe(undefined, { signal });
 
-  const onAbort = () => {
-    // Returning the async iterator cleanly ends the for-await without throwing
-    // into it. The SDK's SSE iterator closes the underlying response.
-    void stream.return(undefined);
-  };
-  if (signal.aborted) {
-    onAbort();
-    return;
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  for await (const event of stream) {
+    // opencode's subscribe is server-scoped, not session-scoped. Our setup
+    // creates one session per opencode server, so events without sessionID
+    // still belong to us. When sessionID IS present, filter defensively.
+    if (!eventBelongsToSession(event, opencodeSessionId)) continue;
 
-  try {
-    for await (const event of stream) {
-      // opencode's subscribe is server-scoped, not session-scoped. Our setup
-      // creates one session per opencode server, so events without sessionID
-      // still belong to us. When sessionID IS present, filter defensively.
-      if (!eventBelongsToSession(event, opencodeSessionId)) continue;
-
+    // Server-level events (server.heartbeat, server.connected) have no
+    // sessionID and aren't session activity, so they must not touch the
+    // idle tracker — heartbeats arrive more often than IDLE_GRACE_MS and
+    // would otherwise keep resetting the idle window indefinitely.
+    if (getEventSessionID(event) !== undefined) {
       if (event.type === "session.idle") {
         tracker.setIdle();
       } else {
         tracker.reset();
       }
-
-      await handleEvent(event, { job, sessionId });
     }
-  } finally {
-    signal.removeEventListener("abort", onAbort);
+
+    await handleEvent(event, { job, sessionId });
   }
 }
 
@@ -60,7 +59,12 @@ function eventBelongsToSession(
   event: Event,
   opencodeSessionId: string,
 ): boolean {
-  const sessionID =
-    "sessionID" in event.properties ? event.properties.sessionID : undefined;
+  const sessionID = getEventSessionID(event);
   return sessionID === undefined || sessionID === opencodeSessionId;
+}
+
+function getEventSessionID(event: Event): string | undefined {
+  if (!("sessionID" in event.properties)) return undefined;
+  const { sessionID } = event.properties;
+  return typeof sessionID === "string" ? sessionID : undefined;
 }

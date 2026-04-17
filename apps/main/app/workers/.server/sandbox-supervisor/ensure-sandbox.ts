@@ -11,7 +11,10 @@ import { db } from "#lib/.server/clients/db.js";
 import { serverEnv } from "#lib/.server/env/server.js";
 
 import { formatError } from "./format-error.js";
-import { startOpencodeServer, waitForOpencodeHealth } from "./opencode-server.js";
+import {
+  startOpencodeServer,
+  waitForOpencodeHealth,
+} from "./opencode-server.js";
 import { queryMarkSandboxStatus } from "./sandbox-status.js";
 
 export type EnsuredSandbox = {
@@ -97,6 +100,9 @@ async function provisionSandbox({
   try {
     sandbox = await Sandbox.create("opencode", {
       apiKey: serverEnv.E2B_API_KEY,
+      lifecycle: {
+        onTimeout: "pause",
+      },
     });
 
     // Record the sandbox ID as soon as it exists so observers can see what

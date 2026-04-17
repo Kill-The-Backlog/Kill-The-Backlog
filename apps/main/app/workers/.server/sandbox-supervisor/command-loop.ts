@@ -164,4 +164,3 @@ async function queryTouchSessionActivity(sessionId: string): Promise<void> {
     .where("id", "=", sessionId)
     .execute();
 }
-
