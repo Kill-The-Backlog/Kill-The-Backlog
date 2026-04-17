@@ -1,57 +1,20 @@
-import type {
-  Event,
-  EventSessionError,
-  OpencodeClient,
-  Part,
-} from "@opencode-ai/sdk/v2";
+import type { Updateable } from "@ktb/db/kysely-types";
+import type { Session } from "@ktb/db/types";
+import type { Event, EventSessionError, Part } from "@opencode-ai/sdk/v2";
 import type { Job } from "bullmq";
 
 import { appendToJSONBField } from "@ktb/db/kysely-helpers";
 
 import { db } from "#lib/.server/clients/db.js";
 
-const EVENTS_DRAIN_TIMEOUT_MS = 10_000;
-
-type EventContext = { job: Job; sessionId: string };
-
-export function createEventsSubscription({
-  client,
-  job,
-  sessionId,
-}: {
-  client: OpencodeClient;
+export type EventContext = {
   job: Job;
   sessionId: string;
-}) {
-  const ctx: EventContext = { job, sessionId };
-  const abortController = new AbortController();
-  const promise = subscribeToEvents(client, ctx, abortController.signal);
+};
 
-  return {
-    async drain() {
-      const timeout = setTimeout(() => {
-        abortController.abort();
-      }, EVENTS_DRAIN_TIMEOUT_MS);
+export async function handleEvent(event: Event, ctx: EventContext) {
+  const { job, sessionId } = ctx;
 
-      try {
-        await promise;
-      } catch (error) {
-        await job.log(`Events subscription error: ${String(error)}`);
-      } finally {
-        clearTimeout(timeout);
-      }
-    },
-  };
-}
-
-function extractErrorMessage(event: EventSessionError): string {
-  const { error } = event.properties;
-  if (!error) return "Unknown error";
-  const { message } = error.data;
-  return typeof message === "string" ? `${error.name}: ${message}` : error.name;
-}
-
-async function handleEvent(event: Event, { job, sessionId }: EventContext) {
   switch (event.type) {
     case "message.part.delta": {
       const { delta, field, partID } = event.properties;
@@ -104,37 +67,25 @@ async function handleEvent(event: Event, { job, sessionId }: EventContext) {
     }
 
     case "session.error": {
-      await db
-        .updateTable("Session")
-        .set({
-          errorMessage: extractErrorMessage(event),
-          updatedAt: new Date(),
-        })
-        .where("id", "=", sessionId)
-        .execute();
+      await queryPatchSession(sessionId, {
+        errorMessage: extractErrorMessage(event),
+      });
       return;
     }
 
     case "session.idle":
+      // Idle transitions are handled by the event pump.
       return;
 
     case "session.updated": {
       const { summary } = event.properties.info;
       if (!summary) return;
-      await db
-        .updateTable("Session")
-        .set({ summary, updatedAt: new Date() })
-        .where("id", "=", sessionId)
-        .execute();
+      await queryPatchSession(sessionId, { summary });
       return;
     }
 
     case "todo.updated": {
-      await db
-        .updateTable("Session")
-        .set({ todos: event.properties.todos, updatedAt: new Date() })
-        .where("id", "=", sessionId)
-        .execute();
+      await queryPatchSession(sessionId, { todos: event.properties.todos });
       return;
     }
 
@@ -142,6 +93,24 @@ async function handleEvent(event: Event, { job, sessionId }: EventContext) {
       await job.log(`Unhandled event: ${event.type}`);
       return;
   }
+}
+
+function extractErrorMessage(event: EventSessionError): string {
+  const { error } = event.properties;
+  if (!error) return "Unknown error";
+  const { message } = error.data;
+  return typeof message === "string" ? `${error.name}: ${message}` : error.name;
+}
+
+async function queryPatchSession(
+  sessionId: string,
+  values: Updateable<Session>,
+): Promise<void> {
+  await db
+    .updateTable("Session")
+    .set({ ...values, updatedAt: new Date() })
+    .where("id", "=", sessionId)
+    .execute();
 }
 
 async function queryUpsertMessage({
@@ -152,7 +121,7 @@ async function queryUpsertMessage({
   opencodeId: string;
   role: string;
   sessionId: string;
-}) {
+}): Promise<void> {
   await db
     .insertInto("SessionMessage")
     .values({
@@ -178,7 +147,7 @@ async function queryUpsertPart({
   opencodeId: string;
   opencodeMessageId: string;
   type: string;
-}) {
+}): Promise<void> {
   await db
     .insertInto("SessionMessagePart")
     .values((eb) => ({
@@ -198,29 +167,4 @@ async function queryUpsertPart({
         .doUpdateSet({ data, type, updatedAt: new Date() }),
     )
     .execute();
-}
-
-async function subscribeToEvents(
-  client: OpencodeClient,
-  ctx: EventContext,
-  signal: AbortSignal,
-) {
-  const { stream } = await client.event.subscribe();
-
-  const abortStream = () => {
-    void stream.throw(new Error("Subscription aborted"));
-  };
-  signal.addEventListener("abort", abortStream);
-
-  try {
-    for await (const event of stream) {
-      await handleEvent(event, ctx);
-
-      if (event.type === "session.idle") {
-        return;
-      }
-    }
-  } finally {
-    signal.removeEventListener("abort", abortStream);
-  }
 }

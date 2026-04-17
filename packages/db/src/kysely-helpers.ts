@@ -2,6 +2,8 @@ import type { Expression, RawBuilder } from "kysely";
 
 import { sql } from "kysely";
 
+export { sql } from "kysely";
+
 /**
  * Atomically append `value` to a top-level text field of a jsonb column.
  *

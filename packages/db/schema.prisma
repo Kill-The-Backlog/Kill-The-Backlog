@@ -37,18 +37,55 @@ model GitHubAccount {
   updatedAt        DateTime @updatedAt
 }
 
+enum SandboxStatus {
+  idle
+  provisioning
+  ready
+  pausing
+  paused
+  resuming
+  terminated
+  errored
+}
+
+enum SessionCommandStatus {
+  pending
+  processing
+  done
+  failed
+}
+
 model Session {
-  id            String   @id @default(uuid())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  prompt        String
-  e2bSandboxId  String?
-  todos         Json?
-  summary       Json?
-  errorMessage  String?
-  messages      SessionMessage[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String           @id @default(uuid())
+  userId            Int
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt            String
+  e2bSandboxId      String?
+  opencodeSessionId String?
+  sandboxStatus     SandboxStatus    @default(idle)
+  lastActivityAt    DateTime         @default(now())
+  todos             Json?
+  summary           Json?
+  errorMessage      String?
+  messages          SessionMessage[]
+  commands          SessionCommand[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model SessionCommand {
+  id          String               @id @default(uuid())
+  sessionId   String
+  session     Session              @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type        String
+  payload     Json
+  status      SessionCommandStatus @default(pending)
+  error       String?
+  createdAt   DateTime             @default(now())
+  processedAt DateTime?
+  updatedAt   DateTime             @updatedAt
+
+  @@index([sessionId, status, createdAt])
 }
 
 model SessionMessage {

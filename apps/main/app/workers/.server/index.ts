@@ -1,5 +1,5 @@
 import type { AnyWorker } from "#lib/.server/workers/define-worker.js";
 
-import { createSandboxWorker } from "./create-sandbox/index.js";
+import { sandboxSupervisorWorker } from "./sandbox-supervisor/index.js";
 
-export const allWorkers: AnyWorker[] = [createSandboxWorker];
+export const allWorkers: AnyWorker[] = [sandboxSupervisorWorker];

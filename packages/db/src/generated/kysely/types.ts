@@ -5,6 +5,25 @@ export type Generated<T> =
     : ColumnType<T, T | undefined, T>;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export const SandboxStatus = {
+  idle: "idle",
+  provisioning: "provisioning",
+  ready: "ready",
+  pausing: "pausing",
+  paused: "paused",
+  resuming: "resuming",
+  terminated: "terminated",
+  errored: "errored",
+} as const;
+export type SandboxStatus = (typeof SandboxStatus)[keyof typeof SandboxStatus];
+export const SessionCommandStatus = {
+  pending: "pending",
+  processing: "processing",
+  done: "done",
+  failed: "failed",
+} as const;
+export type SessionCommandStatus =
+  (typeof SessionCommandStatus)[keyof typeof SessionCommandStatus];
 export type GitHubAccount = {
   id: Generated<number>;
   userId: number;
@@ -19,10 +38,24 @@ export type Session = {
   userId: number;
   prompt: string;
   e2bSandboxId: string | null;
+  opencodeSessionId: string | null;
+  sandboxStatus: Generated<SandboxStatus>;
+  lastActivityAt: Generated<Timestamp>;
   todos: unknown | null;
   summary: unknown | null;
   errorMessage: string | null;
   createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
+export type SessionCommand = {
+  id: string;
+  sessionId: string;
+  type: string;
+  payload: unknown;
+  status: Generated<SessionCommandStatus>;
+  error: string | null;
+  createdAt: Generated<Timestamp>;
+  processedAt: Timestamp | null;
   updatedAt: Timestamp;
 };
 export type SessionMessage = {
@@ -54,6 +87,7 @@ export type User = {
 export type DB = {
   GitHubAccount: GitHubAccount;
   Session: Session;
+  SessionCommand: SessionCommand;
   SessionMessage: SessionMessage;
   SessionMessagePart: SessionMessagePart;
   User: User;

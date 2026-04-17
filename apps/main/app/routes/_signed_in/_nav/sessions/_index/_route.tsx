@@ -8,7 +8,8 @@ import { Button } from "#components/ui/button.js";
 import { Input } from "#components/ui/input.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { createSandboxWorker } from "#workers/.server/create-sandbox/index.js";
+import { sandboxSupervisorWorker } from "#workers/.server/sandbox-supervisor/index.js";
+import { notifySession } from "#workers/.server/sandbox-supervisor/notify.js";
 
 import type { Route } from "./+types/_route";
 
@@ -28,23 +29,38 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
     );
   }
 
-  const session = await db
-    .insertInto("Session")
-    .values({
-      id: crypto.randomUUID(),
-      prompt: result.data.prompt,
-      updatedAt: new Date(),
-      userId: user.id,
-    })
-    .returning("id")
-    .executeTakeFirstOrThrow();
+  const sessionId = crypto.randomUUID();
 
-  await createSandboxWorker.enqueue(
-    { sessionId: session.id },
-    { jobId: session.id },
+  await db.transaction().execute(async (tx) => {
+    await tx
+      .insertInto("Session")
+      .values({
+        id: sessionId,
+        prompt: result.data.prompt,
+        updatedAt: new Date(),
+        userId: user.id,
+      })
+      .execute();
+
+    await tx
+      .insertInto("SessionCommand")
+      .values({
+        id: crypto.randomUUID(),
+        payload: { text: result.data.prompt },
+        sessionId,
+        type: "send-prompt",
+        updatedAt: new Date(),
+      })
+      .execute();
+  });
+
+  await sandboxSupervisorWorker.enqueue(
+    { sessionId },
+    { jobId: sessionId, replaceFinished: true },
   );
+  await notifySession(sessionId);
 
-  throw redirect(`/sessions/${session.id}`);
+  throw redirect(`/sessions/${sessionId}`);
 };
 
 export default function Route() {
