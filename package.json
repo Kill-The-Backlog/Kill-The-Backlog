@@ -8,6 +8,7 @@
     "apps:www": "pnpm --filter \"@ktb/www\"",
     "packages:db": "pnpm --filter \"@ktb/db\"",
     "packages:shared": "pnpm --filter \"@ktb/shared\"",
+    "tools:e2b-template": "pnpm --filter \"@ktb/e2b-template\"",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "prisma": "pnpm --filter \"@ktb/db\" exec prisma",

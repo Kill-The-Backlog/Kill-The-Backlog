@@ -1,0 +1,22 @@
+{
+  "name": "@ktb/e2b-template",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "e2b:build:dev": "node --experimental-strip-types build.dev.ts",
+    "e2b:build:prod": "node --experimental-strip-types build.prod.ts",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "e2b": "^2.19.0"
+  },
+  "devDependencies": {
+    "@ktb/eslint-configs": "workspace:*",
+    "@ktb/ts-configs": "workspace:*",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "typescript": "^6.0.2"
+  }
+}
