@@ -4,7 +4,7 @@ import type { User } from "@ktb/db/types";
 
 import { db } from "#lib/.server/clients/db.js";
 
-import type { GitHubUserProfile } from "./github-oauth";
+import type { GitHubUserProfile } from "./oauth";
 
 type Trx = Transaction<DB>;
 

@@ -1,11 +1,11 @@
 import type { Handler } from "express";
 
-import { sessionStorage } from "#lib/.server/auth/session.js";
+import { authCookieStorage } from "#lib/.server/auth/cookie.js";
 import { db } from "#lib/.server/clients/db.js";
 
 export const staffGuard: Handler = async (req, res, next) => {
-  const session = await sessionStorage.getSession(req.headers.cookie);
-  const userId = session.data.userId;
+  const cookie = await authCookieStorage.getSession(req.headers.cookie);
+  const userId = cookie.data.userId;
 
   if (!userId) {
     res.status(401).send("Unauthorized");

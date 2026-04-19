@@ -8,8 +8,7 @@ import { Button } from "#components/ui/button.js";
 import { Input } from "#components/ui/input.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { sandboxSupervisorWorker } from "#workers/.server/sandbox-supervisor/index.js";
-import { notifySession } from "#workers/.server/sandbox-supervisor/notify.js";
+import { sessionBootstrapperWorker } from "#workers/.server/session-bootstrapper/index.js";
 
 import type { Route } from "./+types/_route";
 
@@ -21,7 +20,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   const { user } = await requireUser(context);
   const formData = await request.formData();
 
-  const result = requestSchema.safeParse({ prompt: formData.get("prompt") });
+  const result = requestSchema.safeParse(Object.fromEntries(formData));
   if (!result.success) {
     return data(
       { error: result.error.issues[0]?.message ?? "Invalid input" },
@@ -31,34 +30,26 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
 
   const sessionId = crypto.randomUUID();
 
-  await db.transaction().execute(async (tx) => {
-    await tx
-      .insertInto("Session")
-      .values({
-        id: sessionId,
-        prompt: result.data.prompt,
-        updatedAt: new Date(),
-        userId: user.id,
-      })
-      .execute();
+  await db
+    .insertInto("Session")
+    .values({
+      id: sessionId,
+      initialPrompt: result.data.prompt,
+      updatedAt: new Date(),
+      userId: user.id,
+    })
+    .execute();
 
-    await tx
-      .insertInto("SessionCommand")
-      .values({
-        id: crypto.randomUUID(),
-        payload: { text: result.data.prompt },
-        sessionId,
-        type: "send-prompt",
-        updatedAt: new Date(),
-      })
-      .execute();
-  });
-
-  await sandboxSupervisorWorker.enqueue(
-    { sessionId },
+  // Kicks off session bootstrap (sandbox + opencode session) and the
+  // initial-prompt dispatch in a background job. The bootstrapper enqueues
+  // the event pump once the sandbox is ready, so follow-ups can start
+  // streaming as soon as the pump picks up. This action returns
+  // immediately after enqueuing — the session page subscribes to events
+  // via Zero.
+  await sessionBootstrapperWorker.enqueue(
+    { initialPrompt: result.data.prompt, sessionId },
     { jobId: sessionId, replaceFinished: true },
   );
-  await notifySession(sessionId);
 
   throw redirect(`/sessions/${sessionId}`);
 };

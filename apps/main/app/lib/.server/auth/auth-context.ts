@@ -4,7 +4,7 @@ import { createContext, redirect } from "react-router";
 
 import { db } from "#lib/.server/clients/db.js";
 
-import { getSession, sessionStorage } from "./session";
+import { authCookieStorage, getAuthCookie } from "./cookie";
 
 type AuthResult = Awaited<ReturnType<typeof fetchUser>>;
 
@@ -32,11 +32,11 @@ export async function requireUser(context: Readonly<RouterContextProvider>) {
   const result = await getUser(context);
 
   if (!result) {
-    const session = getSession(context);
+    const cookie = getAuthCookie(context);
 
     throw redirect("/sign-in", {
       headers: {
-        "Set-Cookie": await sessionStorage.destroySession(session),
+        "Set-Cookie": await authCookieStorage.destroySession(cookie),
       },
     });
   }
@@ -45,8 +45,8 @@ export async function requireUser(context: Readonly<RouterContextProvider>) {
 }
 
 async function fetchUser(context: Readonly<RouterContextProvider>) {
-  const session = getSession(context);
-  const { userId } = session.data;
+  const cookie = getAuthCookie(context);
+  const { userId } = cookie.data;
 
   if (!userId) return null;
 
@@ -58,5 +58,5 @@ async function fetchUser(context: Readonly<RouterContextProvider>) {
 
   if (!user) return null;
 
-  return { session, user };
+  return { cookie, user };
 }

@@ -4,8 +4,8 @@ packages:
   - tools/*
 
 onlyBuiltDependencies:
-  - '@prisma/engines'
-  - '@tailwindcss/oxide'
+  - "@prisma/engines"
+  - "@tailwindcss/oxide"
   - core-js
   - esbuild
   - fsevents

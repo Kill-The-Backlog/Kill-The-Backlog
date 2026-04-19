@@ -5,17 +5,12 @@ import {
   boolean,
   createBuilder,
   createSchema,
-  enumeration,
   json,
   number,
   relationships,
   string,
   table,
 } from "@rocicorp/zero";
-
-export type SandboxStatus = "idle" | "provisioning" | "ready" | "pausing" | "paused" | "resuming" | "terminated" | "errored";
-
-export type SessionCommandStatus = "pending" | "processing" | "done" | "failed";
 
 export const userTable = table("User")
   .columns({
@@ -45,29 +40,13 @@ export const sessionTable = table("Session")
   .columns({
     id: string(),
     userId: number(),
-    prompt: string(),
+    initialPrompt: string(),
     e2bSandboxId: string().optional(),
     opencodeSessionId: string().optional(),
-    sandboxStatus: enumeration<SandboxStatus>(),
-    lastActivityAt: number(),
     todos: json().optional(),
     summary: json().optional(),
     errorMessage: string().optional(),
     createdAt: number(),
-    updatedAt: number(),
-  })
-  .primaryKey("id");
-
-export const sessionCommandTable = table("SessionCommand")
-  .columns({
-    id: string(),
-    sessionId: string(),
-    type: string(),
-    payload: json(),
-    status: enumeration<SessionCommandStatus>(),
-    error: string().optional(),
-    createdAt: number(),
-    processedAt: number().optional(),
     updatedAt: number(),
   })
   .primaryKey("id");
@@ -124,18 +103,6 @@ export const sessionTableRelationships = relationships(sessionTable, ({ one, man
     sourceField: ["id"],
     destField: ["sessionId"],
     destSchema: sessionMessageTable,
-  }),
-  commands: many({
-    sourceField: ["id"],
-    destField: ["sessionId"],
-    destSchema: sessionCommandTable,
-  })
-}));
-export const sessionCommandTableRelationships = relationships(sessionCommandTable, ({ one }) => ({
-  session: one({
-    sourceField: ["sessionId"],
-    destField: ["id"],
-    destSchema: sessionTable,
   })
 }));
 export const sessionMessageTableRelationships = relationships(sessionMessageTable, ({ one, many }) => ({
@@ -166,7 +133,6 @@ export const schema = createSchema({
     userTable,
     gitHubAccountTable,
     sessionTable,
-    sessionCommandTable,
     sessionMessageTable,
     sessionMessagePartTable,
   ],
@@ -174,7 +140,6 @@ export const schema = createSchema({
     userTableRelationships,
     gitHubAccountTableRelationships,
     sessionTableRelationships,
-    sessionCommandTableRelationships,
     sessionMessageTableRelationships,
     sessionMessagePartTableRelationships,
   ],

@@ -1,10 +1,10 @@
 import type { MiddlewareFunction } from "react-router";
 
-import { getSession } from "./session";
+import { getAuthCookie } from "./cookie";
 
 /**
  * Middleware that ensures oauthState and oauthMode are always cleared from
- * session in the response, regardless of success or failure.
+ * the auth cookie in the response, regardless of success or failure.
  */
 export const clearOAuthSessionMiddleware: MiddlewareFunction<Response> = async (
   { context },
@@ -12,11 +12,11 @@ export const clearOAuthSessionMiddleware: MiddlewareFunction<Response> = async (
 ) => {
   const response = await next();
 
-  const session = getSession(context);
+  const cookie = getAuthCookie(context);
   const oauthKeys = ["oauthState", "oauthMode"] as const;
 
   for (const key of oauthKeys) {
-    session.unset(key);
+    cookie.unset(key);
   }
 
   return response;

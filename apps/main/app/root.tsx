@@ -23,7 +23,7 @@ import { Button } from "#components/ui/button.js";
 import { Toaster } from "#components/ui/sonner.js";
 import { useNonce } from "#hooks/use-nonce.js";
 import { getUser } from "#lib/.server/auth/auth-context.js";
-import { sessionMiddleware } from "#lib/.server/auth/session.js";
+import { authCookieMiddleware } from "#lib/.server/auth/cookie.js";
 import { noCacheMiddleware } from "#lib/.server/cache/no-cache-middleware.js";
 import { clientEnv } from "#lib/.server/env/client.js";
 
@@ -34,7 +34,7 @@ import globalCssHref from "./global.css?url";
 export const meta: MetaFunction = () => [{ title: "Kill The Backlog" }];
 
 export const middleware: Route.MiddlewareFunction[] = [
-  sessionMiddleware,
+  authCookieMiddleware,
   noCacheMiddleware,
 ];
 

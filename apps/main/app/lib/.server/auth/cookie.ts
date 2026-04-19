@@ -8,19 +8,21 @@ import {
 
 import { serverEnv } from "#lib/.server/env/server.js";
 
-type SessionData = {
+type AuthCookieData = {
   oauthMode?: "signin";
   oauthState?: string;
   userId?: number;
 };
 
+// Kept as `__session` so existing signed cookies stay valid — this string
+// is a persisted identifier, not a naming choice.
 const COOKIE_NAME = "__session";
 
 const isSecure = serverEnv.MAIN_ORIGIN.startsWith("https://");
 
 const cookieDomain = new URL(serverEnv.MAIN_ORIGIN).hostname;
 
-const sessionCookie = createCookie(COOKIE_NAME, {
+const authCookie = createCookie(COOKIE_NAME, {
   domain: cookieDomain,
   httpOnly: true,
   maxAge: 60 * 60 * 24 * 14, // 14 days
@@ -29,24 +31,24 @@ const sessionCookie = createCookie(COOKIE_NAME, {
   secure: isSecure,
 });
 
-export const sessionStorage = createCookieSessionStorage<
-  SessionData,
-  SessionData
+export const authCookieStorage = createCookieSessionStorage<
+  AuthCookieData,
+  AuthCookieData
 >({
-  cookie: sessionCookie,
+  cookie: authCookie,
 });
 
-const sessionContext =
-  createContext<Awaited<ReturnType<typeof sessionStorage.getSession>>>();
+const authCookieContext =
+  createContext<Awaited<ReturnType<typeof authCookieStorage.getSession>>>();
 
-export const sessionMiddleware: MiddlewareFunction<Response> = async (
+export const authCookieMiddleware: MiddlewareFunction<Response> = async (
   { context, request },
   next,
 ) => {
-  const session = await sessionStorage.getSession(
+  const cookie = await authCookieStorage.getSession(
     request.headers.get("Cookie"),
   );
-  context.set(sessionContext, session);
+  context.set(authCookieContext, cookie);
 
   const response = await next();
 
@@ -57,13 +59,13 @@ export const sessionMiddleware: MiddlewareFunction<Response> = async (
   if (!alreadySet) {
     response.headers.append(
       "Set-Cookie",
-      await sessionStorage.commitSession(session),
+      await authCookieStorage.commitSession(cookie),
     );
   }
 
   return response;
 };
 
-export function getSession(context: Readonly<RouterContextProvider>) {
-  return context.get(sessionContext);
+export function getAuthCookie(context: Readonly<RouterContextProvider>) {
+  return context.get(authCookieContext);
 }

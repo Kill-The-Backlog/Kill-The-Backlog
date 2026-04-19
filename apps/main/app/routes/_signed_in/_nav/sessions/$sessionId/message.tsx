@@ -7,7 +7,7 @@ import { ReasoningPart } from "./reasoning-part.js";
 import { TextPart } from "./text-part.js";
 import { ToolPart } from "./tool-part.js";
 
-type MessageRow = NonNullable<
+export type MessageRow = NonNullable<
   QueryRowType<typeof queries.sessions.one>
 >["messages"][number];
 

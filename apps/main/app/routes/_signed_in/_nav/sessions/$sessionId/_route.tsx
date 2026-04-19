@@ -3,6 +3,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useEffect, useRef } from "react";
 import { data, Navigate, useFetcher } from "react-router";
 import { toast } from "sonner";
+import invariant from "tiny-invariant";
 import { z } from "zod";
 
 import { Alert, AlertDescription } from "#components/ui/alert.js";
@@ -11,8 +12,8 @@ import { Input } from "#components/ui/input.js";
 import { Spinner } from "#components/ui/spinner.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { sandboxSupervisorWorker } from "#workers/.server/sandbox-supervisor/index.js";
-import { notifySession } from "#workers/.server/sandbox-supervisor/notify.js";
+import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
+import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 import { queries } from "#zero/queries.js";
 
 import type { Route } from "./+types/_route";
@@ -32,18 +33,18 @@ export const action = async ({
   const { user } = await requireUser(context);
   const sessionId = params.sessionId;
 
-  const owned = await db
+  const session = await db
     .selectFrom("Session")
-    .select("id")
+    .select(["id", "e2bSandboxId", "opencodeSessionId"])
     .where("id", "=", sessionId)
     .where("userId", "=", user.id)
     .executeTakeFirst();
-  if (!owned) {
+  if (!session) {
     throw data({ error: "Session not found" }, { status: 404 });
   }
 
-  const body = await request.formData();
-  const result = requestSchema.safeParse({ prompt: body.get("prompt") });
+  const formData = await request.formData();
+  const result = requestSchema.safeParse(Object.fromEntries(formData));
   if (!result.success) {
     return data(
       { error: result.error.issues[0]?.message ?? "Invalid input" },
@@ -51,30 +52,24 @@ export const action = async ({
     );
   }
 
-  await db.transaction().execute(async (tx) => {
-    await tx
-      .insertInto("SessionCommand")
-      .values({
-        id: crypto.randomUUID(),
-        payload: { text: result.data.prompt },
-        sessionId,
-        type: "send-prompt",
-        updatedAt: new Date(),
-      })
-      .execute();
-
-    await tx
-      .updateTable("Session")
-      .set({ lastActivityAt: new Date(), updatedAt: new Date() })
-      .where("id", "=", sessionId)
-      .execute();
-  });
-
-  await sandboxSupervisorWorker.enqueue(
-    { sessionId },
-    { jobId: sessionId, replaceFinished: true },
+  invariant(
+    session.e2bSandboxId && session.opencodeSessionId,
+    `Session ${sessionId} has not finished bootstrapping`,
   );
-  await notifySession(sessionId);
+
+  // A follow-up submission is the user's "retry" signal, so wipe any prior
+  // `errorMessage` before we attempt again — otherwise a stale error would
+  // keep showing in the UI and, more importantly, future runs treat it as
+  // the session's live error state. If this attempt fails, the pump /
+  // `session.error` handlers will record a fresh message.
+  await queryPatchSession(sessionId, { errorMessage: null });
+
+  await dispatchPrompt({
+    e2bSandboxId: session.e2bSandboxId,
+    opencodeSessionId: session.opencodeSessionId,
+    sessionId,
+    text: result.data.prompt,
+  });
 
   return data({ ok: true });
 };
@@ -98,15 +93,15 @@ export default function Route({ params }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
-      <UserPrompt prompt={session.prompt} />
-
       {session.messages.length > 0 && (
         <div className="flex flex-col gap-3">
-          {session.messages
-            .filter((m) => m.role === "assistant")
-            .map((message) => (
+          {session.messages.map((message) =>
+            message.role === "user" ? (
+              <UserPrompt key={message.id} message={message} />
+            ) : (
               <Message key={message.id} message={message} />
-            ))}
+            ),
+          )}
         </div>
       )}
 

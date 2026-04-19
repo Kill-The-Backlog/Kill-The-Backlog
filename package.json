@@ -8,11 +8,11 @@
     "apps:www": "pnpm --filter \"@ktb/www\"",
     "packages:db": "pnpm --filter \"@ktb/db\"",
     "packages:shared": "pnpm --filter \"@ktb/shared\"",
-    "tools:e2b-template": "pnpm --filter \"@ktb/e2b-template\"",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "prisma": "pnpm --filter \"@ktb/db\" exec prisma",
-    "shadcn": "pnpm dlx shadcn@latest"
+    "shadcn": "pnpm dlx shadcn@latest",
+    "tools:e2b-template": "pnpm --filter \"@ktb/e2b-template\""
   },
   "devDependencies": {
     "prettier": "^3.8.1",
@@ -22,6 +22,7 @@
     "syncpack": "^14.3.0",
     "turbo": "^2.9.3"
   },
+  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017",
   "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/engines",
@@ -36,6 +37,5 @@
       "protobufjs",
       "sharp"
     ]
-  },
-  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
+  }
 }

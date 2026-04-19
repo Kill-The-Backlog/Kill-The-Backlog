@@ -1,7 +1,10 @@
 import { data, redirect } from "react-router";
 
 import { getUser } from "#lib/.server/auth/auth-context.js";
-import { getSession, sessionStorage } from "#lib/.server/auth/session.js";
+import {
+  authCookieStorage,
+  getAuthCookie,
+} from "#lib/.server/auth/cookie.js";
 
 import type { Route } from "./+types/_route";
 
@@ -13,13 +16,13 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
   if (result) return redirect("/sessions");
 
-  // Clear stale session if userId was set but user wasn't found.
-  const session = getSession(context);
+  // Clear stale auth cookie if userId was set but user wasn't found.
+  const cookie = getAuthCookie(context);
 
-  if (session.data.userId) {
+  if (cookie.data.userId) {
     return data(null, {
       headers: {
-        "Set-Cookie": await sessionStorage.destroySession(session),
+        "Set-Cookie": await authCookieStorage.destroySession(cookie),
       },
     });
   }

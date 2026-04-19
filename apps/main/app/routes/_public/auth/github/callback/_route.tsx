@@ -1,13 +1,13 @@
 import { data, redirect } from "react-router";
 
+import { getAuthCookie } from "#lib/.server/auth/cookie.js";
+import { clearOAuthSessionMiddleware } from "#lib/.server/auth/oauth-middleware.js";
 import {
   exchangeCodeForAccessToken,
   fetchGitHubUserProfile,
   validateOAuthState,
-} from "#lib/.server/auth/github-oauth.js";
-import { upsertUserWithGitHubAccount } from "#lib/.server/auth/github-user-helpers.js";
-import { clearOAuthSessionMiddleware } from "#lib/.server/auth/oauth-middleware.js";
-import { getSession } from "#lib/.server/auth/session.js";
+} from "#lib/.server/github/oauth.js";
+import { upsertUserWithGitHubAccount } from "#lib/.server/github/upsert-user.js";
 
 import type { Route } from "./+types/_route";
 
@@ -16,23 +16,23 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 
 export const loader = async ({ context, request }: Route.LoaderArgs) => {
-  const session = getSession(context);
+  const cookie = getAuthCookie(context);
 
-  const code = extractOAuthCode(request, session);
+  const code = extractOAuthCode(request, cookie);
   const accessToken = await exchangeCodeForAccessToken(code);
   const profile = await fetchGitHubUserProfile(accessToken);
   const user = await upsertUserWithGitHubAccount(profile, accessToken);
 
-  session.set("userId", user.id);
+  cookie.set("userId", user.id);
   return redirect("/");
 };
 
 function extractOAuthCode(
   request: Request,
-  session: ReturnType<typeof getSession>,
+  cookie: ReturnType<typeof getAuthCookie>,
 ): string {
-  const oauthState = session.get("oauthState");
-  const oauthMode = session.get("oauthMode");
+  const oauthState = cookie.get("oauthState");
+  const oauthMode = cookie.get("oauthMode");
 
   if (!oauthState) {
     throw data(

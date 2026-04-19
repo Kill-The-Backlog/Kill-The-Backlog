@@ -1,60 +1,52 @@
-# e2b-template - E2B Sandbox Template
+# e2b-template — opencode headless
 
-This is an E2B sandbox template that allows you to run code in a controlled environment.
+An E2B sandbox template that runs [opencode](https://opencode.ai) in headless
+`serve` mode. The template exposes opencode's HTTP API (including its `/event`
+SSE stream) directly; the worker subscribes to live events and re-hydrates
+any missed state by fetching a snapshot of `/session/:id/message` on every
+(re)connect.
+
+## Ports
+
+| Service  | Port | Notes                                                 |
+| -------- | ---- | ----------------------------------------------------- |
+| opencode | 4096 | Bound on `0.0.0.0`. Full opencode HTTP API available. |
 
 ## Prerequisites
 
-Before you begin, make sure you have:
 - An E2B account (sign up at [e2b.dev](https://e2b.dev))
-- Your E2B API key (get it from your [E2B dashboard](https://e2b.dev/dashboard))
-- Node.js and npm/yarn (or similar) installed
+- `E2B_API_KEY` set in your environment
+- Node.js installed locally (to run the builder)
 
-## Configuration
-
-1. Create a `.env` file in your project root or set the environment variable:
-   ```
-   E2B_API_KEY=your_api_key_here
-   ```
-
-## Installing Dependencies
+## Building
 
 ```bash
-npm install e2b
+# Dev image (tagged "e2b-template-dev")
+pnpm tools:e2b-template e2b:build:dev
+
+# Prod image (tagged "e2b-template")
+pnpm tools:e2b-template e2b:build:prod
 ```
 
-## Building the Template
+## Using the template
 
-```bash
-# For development
-npm run e2b:build:dev
+```ts
+import { Sandbox } from "e2b";
 
-# For production
-npm run e2b:build:prod
+const sandbox = await Sandbox.create("e2b-template");
+
+const opencodeUrl = `https://${sandbox.getHost(4096)}`;
+
+// Hit opencode's API directly for everything: sessions, prompts, events, etc.
+await fetch(`${opencodeUrl}/session`, { method: "POST" /* ... */ });
+
+// Subscribe to the live SSE stream. Note: opencode's /event does not support
+// Last-Event-ID or replay — clients must re-read `/session/:id/message` on
+// reconnect to recover any events missed while disconnected.
+const es = new EventSource(`${opencodeUrl}/event`);
 ```
 
-## Using the Template in a Sandbox
+## Template files
 
-Once your template is built, you can use it in your E2B sandbox:
-
-```typescript
-import { Sandbox } from 'e2b'
-
-// Create a new sandbox instance
-const sandbox = await Sandbox.create('e2b-template')
-
-// Your sandbox is ready to use!
-console.log('Sandbox created successfully')
-```
-
-## Template Structure
-
-- `template.ts` - Defines the sandbox template configuration
-- `build.dev.ts` - Builds the template for development
-- `build.prod.ts` - Builds the template for production
-
-## Next Steps
-
-1. Customize the template in `template.ts` to fit your needs
-2. Build the template using one of the methods above
-3. Use the template in your E2B sandbox code
-4. Check out the [E2B documentation](https://e2b.dev/docs) for more advanced usage
+- `template.ts` — E2B Template definition (base image, install steps, start cmd)
+- `build.dev.ts` / `build.prod.ts` — Build entrypoints
