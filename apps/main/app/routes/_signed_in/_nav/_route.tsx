@@ -43,8 +43,8 @@ export default function Route() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="border-border flex h-12 items-center gap-2 border-b px-3">
+      <SidebarInset className="h-svh">
+        <header className="border-border flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <SidebarTrigger />
         </header>
         <main className="flex-1 overflow-auto">

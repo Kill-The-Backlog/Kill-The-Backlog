@@ -16,7 +16,7 @@
     "paths": {
       "#*": ["./app/*"]
     },
-    "lib": ["es2024", "dom"],
+    "lib": ["es2024", "dom", "dom.iterable"],
     "rootDirs": [".", "./.react-router/types"],
     "exactOptionalPropertyTypes": false,
     "target": "es2021",

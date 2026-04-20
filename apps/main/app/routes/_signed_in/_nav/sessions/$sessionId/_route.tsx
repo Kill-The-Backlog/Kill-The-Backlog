@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import invariant from "tiny-invariant";
 import { z } from "zod";
 
-import { Alert, AlertDescription } from "#components/ui/alert.js";
 import { Button } from "#components/ui/button.js";
 import { Input } from "#components/ui/input.js";
 import { Spinner } from "#components/ui/spinner.js";
@@ -18,8 +17,7 @@ import { queries } from "#zero/queries.js";
 
 import type { Route } from "./+types/_route";
 
-import { Message } from "./message.js";
-import { UserPrompt } from "./user-prompt.js";
+import { Messages } from "./messages.js";
 
 const requestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
@@ -92,26 +90,14 @@ export default function Route({ params }: Route.ComponentProps) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
-      {session.messages.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {session.messages.map((message) =>
-            message.role === "user" ? (
-              <UserPrompt key={message.id} message={message} />
-            ) : (
-              <Message key={message.id} message={message} />
-            ),
-          )}
-        </div>
-      )}
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <Messages className="mx-auto" session={session} />
+      </div>
 
-      {session.errorMessage && (
-        <Alert variant="destructive">
-          <AlertDescription>{session.errorMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      <FollowUpForm />
+      <div className="w-full max-w-3xl shrink-0 self-center px-4 pb-4">
+        <FollowUpForm />
+      </div>
     </div>
   );
 }
