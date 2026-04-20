@@ -18,6 +18,7 @@ export type Session = {
   id: string;
   userId: number;
   initialPrompt: string;
+  repoFullName: string;
   e2bSandboxId: string | null;
   opencodeSessionId: string | null;
   todos: unknown | null;

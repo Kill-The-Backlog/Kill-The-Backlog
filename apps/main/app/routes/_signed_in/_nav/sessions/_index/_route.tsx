@@ -17,6 +17,10 @@ import type { Route } from "./+types/_route";
 
 const requestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
+  repoFullName: z
+    .string()
+    .min(1, "Repository is required")
+    .regex(/^[^/]+\/[^/]+$/, "Repository must be in owner/name form"),
 });
 
 export const action = async ({ context, request }: Route.ActionArgs) => {
@@ -38,6 +42,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
     .values({
       id: sessionId,
       initialPrompt: result.data.prompt,
+      repoFullName: result.data.repoFullName,
       updatedAt: new Date(),
       userId: user.id,
     })
@@ -50,7 +55,12 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   // immediately after enqueuing — the session page subscribes to events
   // via Zero.
   await sessionBootstrapperWorker.enqueue(
-    { initialPrompt: result.data.prompt, sessionId },
+    {
+      initialPrompt: result.data.prompt,
+      repoFullName: result.data.repoFullName,
+      sessionId,
+      userId: user.id,
+    },
     { jobId: sessionId, replaceFinished: true },
   );
 
@@ -87,6 +97,14 @@ export default function Route() {
           ref={textareaRef}
         />
 
+        {selectedRepo && (
+          <input
+            name="repoFullName"
+            type="hidden"
+            value={selectedRepo.fullName}
+          />
+        )}
+
         <RepoPicker
           className="absolute bottom-1.5 left-1.5"
           onChange={setSelectedRepo}
@@ -94,7 +112,7 @@ export default function Route() {
         />
         <Button
           className="absolute right-1.5 bottom-1.5"
-          disabled={isSubmitting}
+          disabled={!selectedRepo || isSubmitting}
           size="icon"
           type="submit"
         >

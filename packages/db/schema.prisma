@@ -42,6 +42,7 @@ model Session {
   userId            Int
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   initialPrompt     String
+  repoFullName      String
   e2bSandboxId      String?
   opencodeSessionId String?
   todos             Json?

@@ -58,10 +58,11 @@ export function RepoPicker({
     <>
       <Button
         className={className}
-        onClick={() => {
+        onMouseDown={() => {
           setOpen(true);
         }}
         type="button"
+        variant="secondary"
       >
         <GithubLogoIcon data-icon="inline-start" />
         {value ? value.fullName : "Select a repository"}

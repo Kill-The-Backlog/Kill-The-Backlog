@@ -41,6 +41,7 @@ export const sessionTable = table("Session")
     id: string(),
     userId: number(),
     initialPrompt: string(),
+    repoFullName: string(),
     e2bSandboxId: string().optional(),
     opencodeSessionId: string().optional(),
     todos: json().optional(),
