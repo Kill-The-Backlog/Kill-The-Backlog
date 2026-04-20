@@ -12,6 +12,7 @@ import { Textarea } from "#components/ui/textarea.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { sessionBootstrapperWorker } from "#workers/.server/session-bootstrapper/index.js";
+import { sessionTitlerWorker } from "#workers/.server/session-titler/index.js";
 
 import type { Route } from "./+types/_route";
 
@@ -53,16 +54,25 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   // the event pump once the sandbox is ready, so follow-ups can start
   // streaming as soon as the pump picks up. This action returns
   // immediately after enqueuing — the session page subscribes to events
-  // via Zero.
-  await sessionBootstrapperWorker.enqueue(
-    {
-      initialPrompt: result.data.prompt,
-      repoFullName: result.data.repoFullName,
-      sessionId,
-      userId: user.id,
-    },
-    { jobId: sessionId, replaceFinished: true },
-  );
+  // via Zero. The titler runs in parallel: it doesn't need the sandbox and
+  // finishes well before bootstrap, so the sidebar gets a friendly title
+  // shortly after creation. A titler failure won't affect session usability
+  // — the sidebar falls back to the raw prompt.
+  await Promise.all([
+    sessionBootstrapperWorker.enqueue(
+      {
+        initialPrompt: result.data.prompt,
+        repoFullName: result.data.repoFullName,
+        sessionId,
+        userId: user.id,
+      },
+      { jobId: sessionId, replaceFinished: true },
+    ),
+    sessionTitlerWorker.enqueue(
+      { initialPrompt: result.data.prompt, sessionId },
+      { jobId: sessionId, replaceFinished: true },
+    ),
+  ]);
 
   throw redirect(`/sessions/${sessionId}`);
 };
@@ -72,6 +82,8 @@ export default function Route() {
   const isSubmitting = fetcher.state !== "idle";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepoItem | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const isSubmitDisabled = !selectedRepo || isSubmitting || !prompt.trim();
 
   useEffect(() => {
     if (fetcher.data?.error) {
@@ -87,14 +99,19 @@ export default function Route() {
           className="min-h-24 resize-none pb-12"
           disabled={isSubmitting}
           name="prompt"
+          onChange={(event) => {
+            setPrompt(event.currentTarget.value);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
               event.preventDefault();
+              if (isSubmitDisabled) return;
               event.currentTarget.form?.requestSubmit();
             }
           }}
           placeholder="Ask or build anything"
           ref={textareaRef}
+          value={prompt}
         />
 
         {selectedRepo && (
@@ -112,7 +129,7 @@ export default function Route() {
         />
         <Button
           className="absolute right-1.5 bottom-1.5"
-          disabled={!selectedRepo || isSubmitting}
+          disabled={isSubmitDisabled}
           size="icon"
           type="submit"
         >

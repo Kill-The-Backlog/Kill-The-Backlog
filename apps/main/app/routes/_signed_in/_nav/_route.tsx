@@ -94,7 +94,9 @@ function SessionList() {
               <NavLink draggable={false} to={`/sessions/${session.id}`}>
                 {({ isActive }) => (
                   <SidebarMenuButton isActive={isActive}>
-                    <span className="truncate">{session.initialPrompt}</span>
+                    <span className="truncate">
+                      {session.title ?? session.initialPrompt}
+                    </span>
                   </SidebarMenuButton>
                 )}
               </NavLink>
