@@ -131,3 +131,5 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 Why do programmers always mix up Halloween and Christmas? Because Oct 31 = Dec 25.
 
 Why do Java developers wear glasses? Because they can't C#.
+
+A SQL query walks into a bar, walks up to two tables and asks: "Can I join you?"
