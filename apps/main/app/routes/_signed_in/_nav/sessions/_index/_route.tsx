@@ -1,9 +1,12 @@
-import { ArrowUpIcon, CaretUpDownIcon } from "@phosphor-icons/react";
-import { useEffect, useRef } from "react";
+import { ArrowUpIcon } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
 import { data, redirect, useFetcher } from "react-router";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import type { GitHubRepoItem } from "#components/repo-picker.js";
+
+import { RepoPicker } from "#components/repo-picker.js";
 import { Button } from "#components/ui/button.js";
 import { Textarea } from "#components/ui/textarea.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
@@ -58,6 +61,7 @@ export default function Route() {
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
   const isSubmitting = fetcher.state !== "idle";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [selectedRepo, setSelectedRepo] = useState<GitHubRepoItem | null>(null);
 
   useEffect(() => {
     if (fetcher.data?.error) {
@@ -83,10 +87,11 @@ export default function Route() {
           ref={textareaRef}
         />
 
-        <Button className="absolute bottom-1.5 left-1.5">
-          Kill-The-Backlog
-          <CaretUpDownIcon data-icon="inline-end" />
-        </Button>
+        <RepoPicker
+          className="absolute bottom-1.5 left-1.5"
+          onChange={setSelectedRepo}
+          value={selectedRepo}
+        />
         <Button
           className="absolute right-1.5 bottom-1.5"
           disabled={isSubmitting}

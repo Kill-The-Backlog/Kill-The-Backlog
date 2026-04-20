@@ -1,12 +1,7 @@
 import type { Selectable } from "@ktb/db/kysely-types";
 import type { User } from "@ktb/db/types";
 
-import {
-  CaretUpDownIcon,
-  GitBranchIcon,
-  SignOutIcon,
-  SwordIcon,
-} from "@phosphor-icons/react";
+import { CaretUpDownIcon, SignOutIcon, SwordIcon } from "@phosphor-icons/react";
 import { useQuery, useZero } from "@rocicorp/zero/react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
@@ -167,13 +162,6 @@ function UserMenu() {
                 <UserInfo user={user} />
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link draggable={false} to="/repos">
-                <GitBranchIcon />
-                Repos
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link draggable={false} onClick={handleSignOut} to="/sign-out">
