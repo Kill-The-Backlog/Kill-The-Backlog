@@ -31,6 +31,7 @@ export type SessionMessage = {
   opencodeId: string;
   sessionId: string;
   role: string;
+  opencodeCreatedAt: Timestamp;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };

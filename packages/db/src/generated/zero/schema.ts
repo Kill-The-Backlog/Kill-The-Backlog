@@ -57,6 +57,7 @@ export const sessionMessageTable = table("SessionMessage")
     opencodeId: string(),
     sessionId: string(),
     role: string(),
+    opencodeCreatedAt: number(),
     createdAt: number(),
     updatedAt: number(),
   })

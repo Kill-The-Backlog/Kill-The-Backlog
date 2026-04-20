@@ -15,7 +15,7 @@ export const queries = defineQueries({
         .related("messages", (m) =>
           m
             .related("parts", (p) => p.orderBy("createdAt", "asc"))
-            .orderBy("createdAt", "asc"),
+            .orderBy("opencodeCreatedAt", "asc"),
         )
         .one(),
     ),

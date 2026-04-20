@@ -30,6 +30,7 @@ export async function upsertMessage(
     .insertInto("SessionMessage")
     .values({
       id: crypto.randomUUID(),
+      opencodeCreatedAt: new Date(message.time.created),
       opencodeId: message.id,
       role: message.role,
       sessionId,
