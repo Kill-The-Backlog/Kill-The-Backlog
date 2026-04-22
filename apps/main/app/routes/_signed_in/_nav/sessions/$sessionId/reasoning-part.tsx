@@ -37,7 +37,7 @@ export function ReasoningPart({
         {label}
         <CaretDownIcon className="size-3 shrink-0 -rotate-90 opacity-0 transition-[rotate,opacity] group-hover/reasoning:opacity-100 group-data-[state=open]/reasoning:rotate-0 group-data-[state=open]/reasoning:opacity-100" />
       </CollapsibleTrigger>
-      <CollapsibleContent className="text-muted-foreground mt-2 whitespace-pre-wrap italic">
+      <CollapsibleContent className="text-muted-foreground mt-3 whitespace-pre-wrap italic">
         {part.text}
       </CollapsibleContent>
     </Collapsible>

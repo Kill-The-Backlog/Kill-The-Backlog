@@ -2,6 +2,8 @@ import type { Part } from "@opencode-ai/sdk/v2";
 
 import { z } from "zod";
 
+import { pluralize } from "#lib/utils/pluralize.js";
+
 const applyPatchMetadataSchema = z.object({
   files: z
     .array(
@@ -34,7 +36,7 @@ export function ApplyPatchToolPart({
       {fileCount > 0 && (
         <span className="text-muted-foreground">
           {" "}
-          to {fileCount} file{fileCount === 1 ? "" : "s"}
+          to {pluralize(fileCount, "file")}
         </span>
       )}
       {(additions > 0 || deletions > 0) && (

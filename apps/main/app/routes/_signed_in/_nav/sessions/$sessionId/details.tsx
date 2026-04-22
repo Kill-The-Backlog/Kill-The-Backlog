@@ -42,7 +42,7 @@ export function Details({
 
       {session.prNumber !== null && (
         <a
-          className="flex items-center gap-2 hover:underline"
+          className="animate-in fade-in-0 flex items-center gap-2 duration-500 hover:underline"
           href={`https://github.com/${session.repoFullName}/pull/${session.prNumber}`}
           rel="noopener noreferrer"
           target="_blank"

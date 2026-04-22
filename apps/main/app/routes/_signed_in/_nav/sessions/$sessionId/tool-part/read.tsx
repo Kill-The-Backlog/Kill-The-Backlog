@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { basename } from "#lib/utils/basename.js";
 
-const readInputSchema = z.object({
+export const readInputSchema = z.object({
   filePath: z.string().optional(),
   limit: z.number().optional(),
   offset: z.number().optional(),

@@ -1,6 +1,6 @@
 import type { Part } from "@opencode-ai/sdk/v2";
 
-import type { MessageRow } from "./message.js";
+import type { MessageRow } from "./timeline.js";
 
 export function UserPrompt({ message }: { message: MessageRow }) {
   const text = message.parts
