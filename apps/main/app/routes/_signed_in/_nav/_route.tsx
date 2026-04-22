@@ -3,6 +3,7 @@ import type { User } from "@ktb/db/types";
 
 import { CaretUpDownIcon, SignOutIcon, SwordIcon } from "@phosphor-icons/react";
 import { useQuery, useZero } from "@rocicorp/zero/react";
+import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
@@ -34,16 +35,26 @@ import { getInitials } from "#lib/utils.js";
 import { useRootLoaderData } from "#root.js";
 import { queries } from "#zero/queries.js";
 
+import { HeaderSlotContext } from "./header-slot.js";
+
 export default function Route() {
+  const [headerEl, setHeaderEl] = useState<HTMLElement | null>(null);
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="h-svh">
         <header className="border-border flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <SidebarTrigger />
+          {/* Portal target for child routes' `HeaderSlot` items. `display:
+              contents` lets the portaled children participate directly in the
+              header's flex layout, inheriting its gap and alignment. */}
+          <div className="contents" ref={setHeaderEl} />
         </header>
         <main className="flex-1 overflow-auto">
-          <Outlet />
+          <HeaderSlotContext.Provider value={headerEl}>
+            <Outlet />
+          </HeaderSlotContext.Provider>
         </main>
       </SidebarInset>
     </SidebarProvider>

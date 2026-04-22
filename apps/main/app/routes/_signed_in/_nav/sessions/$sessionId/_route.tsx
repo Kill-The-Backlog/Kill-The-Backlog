@@ -17,6 +17,7 @@ import { queries } from "#zero/queries.js";
 
 import type { Route } from "./+types/_route";
 
+import { HeaderSlot } from "../../header-slot.js";
 import { Messages } from "./messages.js";
 
 const requestSchema = z.object({
@@ -91,6 +92,11 @@ export default function Route({ params }: Route.ComponentProps) {
 
   return (
     <div className="flex h-full flex-col">
+      <HeaderSlot>
+        <span className="truncate text-sm font-medium">
+          {session.title ?? session.initialPrompt}
+        </span>
+      </HeaderSlot>
       <div className="flex-1 overflow-y-auto">
         <Messages className="mx-auto" session={session} />
       </div>
