@@ -127,3 +127,8 @@ pnpm apps:main dev
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+Q: Why did the developer go broke?
+A: Because they used up all their cache.
