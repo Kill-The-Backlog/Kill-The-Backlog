@@ -26,7 +26,7 @@ import {
   EmptyTitle,
 } from "#components/ui/empty.js";
 import { Skeleton } from "#components/ui/skeleton.js";
-import { getInitials } from "#lib/utils.js";
+import { getInitials } from "#lib/utils/get-initials.js";
 
 export type { GitHubRepoItem };
 

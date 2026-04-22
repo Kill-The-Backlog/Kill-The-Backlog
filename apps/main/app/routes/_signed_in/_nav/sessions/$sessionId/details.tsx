@@ -6,7 +6,8 @@ import invariant from "tiny-invariant";
 import type { queries } from "#zero/queries.js";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
-import { cn, getInitials } from "#lib/utils.js";
+import { cn } from "#lib/utils/cn.js";
+import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
 
 type SessionRow = NonNullable<QueryRowType<typeof queries.sessions.one>>;

@@ -31,7 +31,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "#components/ui/sidebar.js";
-import { getInitials } from "#lib/utils.js";
+import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
 import { queries } from "#zero/queries.js";
 

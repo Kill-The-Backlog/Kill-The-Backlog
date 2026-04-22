@@ -1,19 +1,30 @@
 import type { Part } from "@opencode-ai/sdk/v2";
 
 import { CheckIcon, XIcon } from "@phosphor-icons/react";
-import { z } from "zod";
 
 import { Spinner } from "#components/ui/spinner.js";
 
-const grepInputSchema = z.object({
-  include: z.string().optional(),
-  path: z.string().optional(),
-  pattern: z.string().optional(),
-});
+import { ApplyPatchToolPart } from "./tool-part/apply-patch.js";
+import { EditToolPart } from "./tool-part/edit.js";
+import { GlobToolPart } from "./tool-part/glob.js";
+import { GrepToolPart } from "./tool-part/grep.js";
+import { ReadToolPart } from "./tool-part/read.js";
+import { WriteToolPart } from "./tool-part/write.js";
 
 export function ToolPart({ part }: { part: Extract<Part, { type: "tool" }> }) {
-  if (part.tool === "grep") {
-    return <GrepToolPart part={part} />;
+  switch (part.tool) {
+    case "apply_patch":
+      return <ApplyPatchToolPart part={part} />;
+    case "edit":
+      return <EditToolPart part={part} />;
+    case "glob":
+      return <GlobToolPart part={part} />;
+    case "grep":
+      return <GrepToolPart part={part} />;
+    case "read":
+      return <ReadToolPart part={part} />;
+    case "write":
+      return <WriteToolPart part={part} />;
   }
 
   const { state, tool } = part;
@@ -24,32 +35,6 @@ export function ToolPart({ part }: { part: Extract<Part, { type: "tool" }> }) {
       <ToolStatusIcon status={state.status} />
       <span className="font-medium">{tool}</span>
       {title && <span className="truncate">{title}</span>}
-    </div>
-  );
-}
-
-function basename(path: string): string {
-  return path.split("/").filter(Boolean).pop() ?? path;
-}
-
-function GrepToolPart({ part }: { part: Extract<Part, { type: "tool" }> }) {
-  const { include, path, pattern } =
-    grepInputSchema.safeParse(part.state.input).data ?? {};
-  const fileName = path ? basename(path) : undefined;
-  const isDone =
-    part.state.status === "completed" || part.state.status === "error";
-  const verb = isDone ? "Grepped" : "Grepping";
-
-  return (
-    <div className="text-foreground/75 text-xs">
-      {verb}
-      {pattern && <span className="text-muted-foreground"> {pattern}</span>}
-      {fileName && (
-        <span className="text-muted-foreground"> in {fileName}</span>
-      )}
-      {include && (
-        <span className="text-muted-foreground"> matching {include}</span>
-      )}
     </div>
   );
 }

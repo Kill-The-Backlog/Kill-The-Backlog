@@ -13,7 +13,7 @@ import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
-import { cn } from "#lib/utils.js";
+import { cn } from "#lib/utils/cn.js";
 import { queries } from "#zero/queries.js";
 
 import type { Route } from "./+types/_route";

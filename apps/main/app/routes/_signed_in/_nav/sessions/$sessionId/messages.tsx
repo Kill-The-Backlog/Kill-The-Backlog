@@ -3,7 +3,7 @@ import type { QueryRowType } from "@rocicorp/zero";
 import type { queries } from "#zero/queries.js";
 
 import { Alert, AlertDescription } from "#components/ui/alert.js";
-import { cn } from "#lib/utils.js";
+import { cn } from "#lib/utils/cn.js";
 
 import { Message } from "./message.js";
 import { UserPrompt } from "./user-prompt.js";
