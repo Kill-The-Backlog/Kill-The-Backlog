@@ -2,6 +2,7 @@ import type { Updateable } from "@ktb/db/kysely-types";
 import type { CardRun } from "@ktb/db/types";
 import type { Job } from "bullmq";
 
+import { Octokit } from "@octokit/rest";
 import { Sandbox } from "e2b";
 import { quote } from "shell-quote";
 
@@ -150,6 +151,7 @@ async function executeCardRun({
   await finalizeRunWithGit({
     branchName,
     cardTitle: context.cardTitle,
+    fullName: context.fullName,
     oauthAccessToken: context.oauthAccessToken,
     output,
     runId,
@@ -160,6 +162,7 @@ async function executeCardRun({
 async function finalizeRunWithGit({
   branchName,
   cardTitle,
+  fullName,
   oauthAccessToken,
   output,
   runId,
@@ -167,11 +170,14 @@ async function finalizeRunWithGit({
 }: {
   branchName: string;
   cardTitle: string;
+  fullName: string;
   oauthAccessToken: string;
   output: CardRunOutputEmitter;
   runId: string;
   sandbox: Sandbox;
 }) {
+  const [repoOwner, repoName] = fullName.split("/");
+
   await output.step("Committing and pushing...", async (emit) => {
     await sandbox.git.add(REPO_PATH, { all: true });
 
@@ -192,6 +198,24 @@ async function finalizeRunWithGit({
 
     await updateRun(runId, { branchName, status: "completed" });
     emit.emitText(`Done! Branch: ${branchName}`);
+  });
+
+  await output.step("Creating pull request...", async (emit) => {
+    const octokit = new Octokit({ auth: oauthAccessToken });
+
+    const { data: pr } = await octokit.rest.pulls.create({
+      owner: repoOwner,
+      repo: repoName,
+      title: `[ktb] ${cardTitle}`,
+      body: `Kill The Backlog - Card: ${cardTitle}`,
+      head: branchName,
+      base: "main",
+    });
+
+    const prUrl = pr.html_url;
+    await updateRun(runId, { prUrl });
+
+    emit.emitText(`Pull Request created: ${prUrl}`);
   });
 }
 

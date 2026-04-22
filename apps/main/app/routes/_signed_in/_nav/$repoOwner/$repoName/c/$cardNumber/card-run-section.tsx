@@ -5,6 +5,7 @@ import {
   CheckCircleIcon,
   CircleNotchIcon,
   GitBranchIcon,
+  GitPullRequestIcon,
   PlayIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
@@ -81,6 +82,24 @@ function BranchLinkButton({ latestRun }: { latestRun: Row["CardRun"] }) {
   );
 }
 
+function PRLinkButton({ latestRun }: { latestRun: Row["CardRun"] }) {
+  if (
+    latestRun.status !== "completed" ||
+    latestRun.prUrl == null
+  ) {
+    return null;
+  }
+
+  return (
+    <Button asChild size="xs" variant="outline">
+      <a href={latestRun.prUrl} rel="noopener noreferrer" target="_blank">
+        <GitPullRequestIcon weight="bold" />
+        PR
+      </a>
+    </Button>
+  );
+}
+
 function CardRunBody({
   events,
   latestRun,
@@ -149,6 +168,7 @@ function CardRunHeader({
       <div className="flex items-center gap-2">
         {latestRun && <RunStatusBadge status={latestRun.status} />}
         {latestRun && <BranchLinkButton latestRun={latestRun} />}
+        {latestRun && <PRLinkButton latestRun={latestRun} />}
         <Button
           disabled={isBusy}
           onClick={onStartRun}

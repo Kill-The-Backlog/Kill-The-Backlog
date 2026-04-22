@@ -78,6 +78,7 @@ export const cardRunTable = table("CardRun")
     userId: number(),
     status: enumeration<CardRunStatus>(),
     branchName: string().optional(),
+    prUrl: string().optional(),
     createdAt: number(),
     updatedAt: number(),
   })
