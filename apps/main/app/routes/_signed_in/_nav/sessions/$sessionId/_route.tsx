@@ -105,8 +105,8 @@ export default function Route({ params }: Route.ComponentProps) {
         <div className="flex w-full max-w-5xl gap-8">
           {/* Messages */}
           <div className="flex min-w-0 flex-1 flex-col">
-            <Messages className="pb-32" session={session} />
-            <FollowUpForm className="sticky bottom-0 -mb-8 pb-4" />
+            <Messages className="flex-1 pb-32" session={session} />
+            <FollowUpForm className="sticky bottom-0 -mb-8 shrink-0 pb-4" />
           </div>
           {/* Details */}
           <Details
