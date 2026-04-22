@@ -5,6 +5,7 @@ import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { Spinner } from "#components/ui/spinner.js";
 
 import { ApplyPatchToolPart } from "./tool-part/apply-patch.js";
+import { BashToolPart } from "./tool-part/bash.js";
 import { EditToolPart } from "./tool-part/edit.js";
 import { GlobToolPart } from "./tool-part/glob.js";
 import { GrepToolPart } from "./tool-part/grep.js";
@@ -15,6 +16,8 @@ export function ToolPart({ part }: { part: Extract<Part, { type: "tool" }> }) {
   switch (part.tool) {
     case "apply_patch":
       return <ApplyPatchToolPart part={part} />;
+    case "bash":
+      return <BashToolPart part={part} />;
     case "edit":
       return <EditToolPart part={part} />;
     case "glob":
