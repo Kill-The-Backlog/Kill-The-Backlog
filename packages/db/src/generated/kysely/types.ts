@@ -22,6 +22,7 @@ export type Session = {
   repoFullName: string;
   e2bSandboxId: string | null;
   opencodeSessionId: string | null;
+  prNumber: number | null;
   todos: unknown | null;
   summary: unknown | null;
   errorMessage: string | null;

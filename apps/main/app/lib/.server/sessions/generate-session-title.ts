@@ -27,5 +27,5 @@ export async function generateSessionTitle(prompt: string): Promise<string> {
     throw new Error("Anthropic response contained no text block");
   }
 
-  return textBlock.text;
+  return textBlock.text.trim();
 }

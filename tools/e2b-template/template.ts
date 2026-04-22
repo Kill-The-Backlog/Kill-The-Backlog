@@ -26,6 +26,17 @@ export const template = Template()
     ],
     { user: "root" },
   )
+  // Global opencode config for the non-root sandbox user that runs
+  // `opencode serve`. We deny the `question` tool so the model can't stall
+  // a turn waiting on an answer in this headless HTTP-only deployment —
+  // there's no one to answer. opencode's default is "allow all", so this
+  // file intentionally only denies `question` and leaves everything else
+  // at defaults; adding a wildcard `"*": "allow"` would re-enable
+  // `question` (upstream issue anomalyco/opencode#13827).
+  .makeDir("/home/user/.config/opencode", { user: "user" })
+  .copy("./opencode.json", "/home/user/.config/opencode/opencode.json", {
+    user: "user",
+  })
   // Ready only once opencode's HTTP API responds on /global/health.
   .setStartCmd(
     `opencode serve --hostname 0.0.0.0 --port ${OPENCODE_PORT}`,

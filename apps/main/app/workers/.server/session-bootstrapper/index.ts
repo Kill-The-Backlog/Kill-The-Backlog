@@ -1,11 +1,14 @@
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
 import { Sandbox } from "e2b";
-import invariant from "tiny-invariant";
 
 import { db } from "#lib/.server/clients/db.js";
 import { serverEnv } from "#lib/.server/env/server.js";
 import { formatError } from "#lib/.server/format-error.js";
 import { opencodeBaseUrl } from "#lib/.server/opencode/base-url.js";
+import { branchNameForSession } from "#lib/.server/sandbox-git/branch-name.js";
+import { clonePathForRepo } from "#lib/.server/sandbox-git/clone-path.js";
+import { configureGitIdentity } from "#lib/.server/sandbox-git/configure-identity.js";
+import { createSessionBranch } from "#lib/.server/sandbox-git/create-branch.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 import { defineWorker } from "#lib/.server/workers/define-worker.js";
@@ -16,12 +19,6 @@ type JobData = {
   sessionId: string;
   userId: number;
 };
-
-// The e2bdev/base image runs commands as the non-root `user` account with
-// `/home/user` as its home directory. We clone selected repos into a
-// subdirectory there so opencode's session (rooted at the same path) can
-// see them without extra configuration.
-const SANDBOX_HOME_DIR = "/home/user";
 
 // Bootstraps a new session: creates the E2B sandbox, creates an opencode
 // session inside it, persists the IDs, and dispatches the session's
@@ -45,13 +42,11 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
 
     let sandbox: Sandbox | undefined;
     try {
-      const repoName = repoFullName.split("/")[1];
-      invariant(repoName, `Invalid repoFullName: ${repoFullName}`);
-      const clonePath = `${SANDBOX_HOME_DIR}/${repoName}`;
+      const clonePath = clonePathForRepo(repoFullName);
 
       const githubAccount = await db
         .selectFrom("GitHubAccount")
-        .select("oauthAccessToken")
+        .select(["githubId", "login", "oauthAccessToken"])
         .where("userId", "=", userId)
         .executeTakeFirst();
       if (!githubAccount) {
@@ -76,6 +71,22 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
         password: githubAccount.oauthAccessToken,
         path: clonePath,
         username: "x-access-token",
+      });
+
+      // Configure git identity and check out the session's feature branch
+      // BEFORE opencode starts writing, so every subsequent commit is
+      // attributed to the session owner and lands on `ktb/<sessionId>`
+      // rather than the repo's default branch.
+      await configureGitIdentity({
+        clonePath,
+        githubId: githubAccount.githubId,
+        login: githubAccount.login,
+        sandbox,
+      });
+      await createSessionBranch({
+        branchName: branchNameForSession(sessionId),
+        clonePath,
+        sandbox,
       });
 
       const baseUrl = opencodeBaseUrl(sandbox.sandboxId);

@@ -34,13 +34,21 @@ const RECONNECT_DELAY_MS = 1_000;
 // a no-op. The idle timer owns the decision of when the pump exits: when
 // opencode has been continuously idle for the grace window, it aborts the
 // internal controller and the outer loop exits cleanly.
+//
+// `onIdle` fires synchronously on every `session.status === "idle"` event
+// and is awaited before the next event is processed. The SSE stream buffers
+// in memory while the callback runs, so events aren't lost. The callback
+// must be idempotent — opencode can emit duplicate idle statuses (e.g.
+// after a reconnect) and we do not filter them here.
 export async function runEventPump({
   job,
+  onIdle,
   opencodeBaseUrl,
   opencodeSessionId,
   sessionId,
 }: {
   job: Job;
+  onIdle: () => Promise<void>;
   opencodeBaseUrl: string;
   opencodeSessionId: string;
   sessionId: string;
@@ -67,6 +75,7 @@ export async function runEventPump({
       try {
         await runSingleConnection({
           job,
+          onIdle,
           opencodeBaseUrl,
           opencodeSessionId,
           sessionId,
@@ -116,6 +125,7 @@ function eventBelongsToSession(
 // so the snapshot never overwrites a newer live event.
 async function runSingleConnection({
   job,
+  onIdle,
   opencodeBaseUrl,
   opencodeSessionId,
   sessionId,
@@ -123,6 +133,7 @@ async function runSingleConnection({
   timer,
 }: {
   job: Job;
+  onIdle: () => Promise<void>;
   opencodeBaseUrl: string;
   opencodeSessionId: string;
   sessionId: string;
@@ -195,6 +206,15 @@ async function runSingleConnection({
     // window expire.
     if (event.type === "session.status") {
       timer.onStatus(event.properties.status);
+
+      // Hand off to the worker on every idle emission. The callback owns
+      // whatever the worker wants to do on idle (commit, push, etc.); the
+      // pump's only contract is "I'll await you before advancing the
+      // stream". Upstream events keep buffering in the SSE queue while
+      // the callback runs.
+      if (event.properties.status.type === "idle") {
+        await onIdle();
+      }
     }
 
     await handleEvent(event, { job, sessionId });

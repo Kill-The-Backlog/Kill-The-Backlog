@@ -46,6 +46,7 @@ model Session {
   repoFullName      String
   e2bSandboxId      String?
   opencodeSessionId String?
+  prNumber          Int?
   todos             Json?
   summary           Json?
   errorMessage      String?
