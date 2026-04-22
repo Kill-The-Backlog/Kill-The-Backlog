@@ -18,12 +18,7 @@ export function Messages({
   session: SessionRow;
 }) {
   return (
-    <div
-      className={cn(
-        "flex w-full max-w-3xl flex-col gap-3 px-4 py-8",
-        className,
-      )}
-    >
+    <div className={cn("flex flex-col gap-3", className)}>
       {session.messages.length > 0 &&
         session.messages.map((message) =>
           message.role === "user" ? (

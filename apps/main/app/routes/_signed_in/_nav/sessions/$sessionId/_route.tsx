@@ -13,11 +13,13 @@ import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
+import { cn } from "#lib/utils.js";
 import { queries } from "#zero/queries.js";
 
 import type { Route } from "./+types/_route";
 
 import { HeaderSlot } from "../../header-slot.js";
+import { Details } from "./details.js";
 import { Messages } from "./messages.js";
 
 const requestSchema = z.object({
@@ -97,18 +99,27 @@ export default function Route({ params }: Route.ComponentProps) {
           {session.title ?? session.initialPrompt}
         </span>
       </HeaderSlot>
-      <div className="flex-1 overflow-y-auto">
-        <Messages className="mx-auto" session={session} />
-      </div>
-
-      <div className="w-full max-w-3xl shrink-0 self-center px-4 pb-4">
-        <FollowUpForm />
+      {/* Page */}
+      <div className="flex flex-1 justify-center px-4 py-8">
+        {/* Content */}
+        <div className="flex w-full max-w-5xl gap-8">
+          {/* Messages */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Messages className="pb-32" session={session} />
+            <FollowUpForm className="sticky bottom-0 -mb-8 pb-4" />
+          </div>
+          {/* Details */}
+          <Details
+            className="sticky top-8 hidden w-64 shrink-0 self-start lg:flex"
+            session={session}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-function FollowUpForm() {
+function FollowUpForm({ className }: { className?: string }) {
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
   const isSubmitting = fetcher.state !== "idle";
   const formRef = useRef<HTMLFormElement>(null);
@@ -129,7 +140,7 @@ function FollowUpForm() {
 
   return (
     <fetcher.Form
-      className="flex w-full items-center gap-1.5"
+      className={cn("bg-background flex items-center gap-1.5", className)}
       method="post"
       ref={formRef}
     >
