@@ -127,3 +127,7 @@ pnpm apps:main dev
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+*Why do developers prefer AI agents over managers? At least the AI actually completes the tasks it promises to do.*
