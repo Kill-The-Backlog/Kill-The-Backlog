@@ -1,3 +1,5 @@
+"use client";
+
 import type * as React from "react";
 
 import { XIcon } from "@phosphor-icons/react";
@@ -42,7 +44,7 @@ function SheetContent({
         {showCloseButton && (
           <SheetPrimitive.Close asChild data-slot="sheet-close">
             <Button
-              className="absolute top-3 right-3"
+              className="absolute top-4 right-4"
               size="icon-sm"
               variant="ghost"
             >
@@ -72,7 +74,7 @@ function SheetDescription({
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      className={cn("mt-auto flex flex-col gap-2 p-6", className)}
       data-slot="sheet-footer"
       {...props}
     />
@@ -82,7 +84,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-0.5 p-4", className)}
+      className={cn("flex flex-col gap-1.5 p-6", className)}
       data-slot="sheet-header"
       {...props}
     />
@@ -96,7 +98,7 @@ function SheetOverlay({
   return (
     <SheetPrimitive.Overlay
       className={cn(
-        "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 fixed inset-0 z-50 bg-black/10 text-xs/relaxed duration-100 supports-backdrop-filter:backdrop-blur-xs",
+        "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 fixed inset-0 z-50 bg-black/80 duration-100 supports-backdrop-filter:backdrop-blur-xs",
         className,
       )}
       data-slot="sheet-overlay"

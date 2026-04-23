@@ -22,8 +22,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
-    "@fontsource-variable/inter": "^5.2.8",
-    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource-variable/noto-sans": "^5.2.10",
     "@ktb/db": "workspace:*",
     "@ktb/shared": "workspace:*",
     "@octokit/oauth-authorization-url": "^8.0.0",
@@ -56,7 +55,7 @@
     "react-router": "^7.13.2",
     "remark-gfm": "^4.0.1",
     "remix-utils": "^9.3.1",
-    "shadcn": "^4.1.2",
+    "shadcn": "^4.4.0",
     "shell-quote": "^1.8.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
