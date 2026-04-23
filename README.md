@@ -127,3 +127,7 @@ pnpm apps:main dev
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+Why do programmers hate fish? Because they can't tuna (tuna = C sharp). 🐟
