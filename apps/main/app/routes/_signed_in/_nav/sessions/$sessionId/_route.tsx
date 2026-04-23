@@ -1,14 +1,14 @@
 import { ArrowUpIcon } from "@phosphor-icons/react";
 import { useQuery } from "@rocicorp/zero/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { data, Navigate, useFetcher } from "react-router";
 import { toast } from "sonner";
 import invariant from "tiny-invariant";
 import { z } from "zod";
 
 import { Button } from "#components/ui/button.js";
-import { Input } from "#components/ui/input.js";
 import { Spinner } from "#components/ui/spinner.js";
+import { Textarea } from "#components/ui/textarea.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
@@ -104,7 +104,7 @@ export default function Route({ params }: Route.ComponentProps) {
         className="flex flex-1 justify-center px-4 py-8"
         /* Remount the whole page subtree on session change so every child's
           per-session state resets in one place: Messages' sticky-scroll
-          anchor, Details' mount-time animation gates, and FollowUpForm's
+          anchor, Details' mount-time animation gates, and Composer's
           input value (which the browser would otherwise preserve across
           navigations). */
         key={session.id}
@@ -114,7 +114,7 @@ export default function Route({ params }: Route.ComponentProps) {
           {/* Messages */}
           <div className="flex min-w-0 flex-1 flex-col">
             <Messages className="flex-1 pb-32" session={session} />
-            <FollowUpForm className="sticky bottom-0 -mb-8 shrink-0 pb-4" />
+            <Composer className="sticky bottom-0 -mb-8 shrink-0 pb-4" />
           </div>
           {/* Details */}
           <Details
@@ -127,42 +127,64 @@ export default function Route({ params }: Route.ComponentProps) {
   );
 }
 
-function FollowUpForm({ className }: { className?: string }) {
+function Composer({ className }: { className?: string }) {
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
   const isSubmitting = fetcher.state !== "idle";
-  const formRef = useRef<HTMLFormElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [prompt, setPrompt] = useState("");
+  const isSubmitDisabled = isSubmitting || !prompt.trim();
 
   const actionData = fetcher.data;
   useEffect(() => {
     if (actionData && "error" in actionData && actionData.error) {
       toast.error(actionData.error);
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
       return;
     }
     if (actionData && "ok" in actionData && actionData.ok) {
-      formRef.current?.reset();
-      inputRef.current?.focus();
+      setPrompt("");
+      textareaRef.current?.focus();
     }
   }, [actionData]);
 
   return (
     <fetcher.Form
-      className={cn("bg-background flex items-center gap-1.5", className)}
+      className={cn("bg-background w-full", className)}
       method="post"
-      ref={formRef}
     >
-      <Input
-        autoFocus
-        disabled={isSubmitting}
-        name="prompt"
-        placeholder="Follow up"
-        ref={inputRef}
-        type="text"
-      />
-      <Button disabled={isSubmitting} size="icon" type="submit">
-        <ArrowUpIcon />
-      </Button>
+      {/* Relative wrapper sits inside the form so the absolutely positioned
+      submit button anchors to the textarea's edge. Putting `relative` on
+      the form itself would shift the button outward by any padding the
+      form receives from its parent (e.g. pb-4). */}
+      <div className="relative">
+        <Textarea
+          autoFocus
+          className="min-h-24 resize-none pb-10"
+          disabled={isSubmitting}
+          name="prompt"
+          onChange={(event) => {
+            setPrompt(event.currentTarget.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              if (isSubmitDisabled) return;
+              event.currentTarget.form?.requestSubmit();
+            }
+          }}
+          placeholder="Ask or build anything"
+          ref={textareaRef}
+          value={prompt}
+        />
+        <Button
+          className="absolute right-1.5 bottom-1.5"
+          disabled={isSubmitDisabled}
+          size="icon"
+          type="submit"
+        >
+          <ArrowUpIcon />
+        </Button>
+      </div>
     </fetcher.Form>
   );
 }

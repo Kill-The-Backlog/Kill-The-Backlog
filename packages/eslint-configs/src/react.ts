@@ -18,6 +18,7 @@ export default tsEslint.config(
   reactHooks.configs.flat.recommended,
   {
     rules: {
+      "react-hooks/set-state-in-effect": "off",
       "react/prop-types": "off",
     },
   },

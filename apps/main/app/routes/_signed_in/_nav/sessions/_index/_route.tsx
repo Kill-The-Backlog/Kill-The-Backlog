@@ -96,14 +96,14 @@ export default function Route() {
     <div className="flex h-full flex-col items-center justify-center px-4">
       <fetcher.Form className="relative w-full max-w-2xl" method="post">
         <Textarea
-          className="min-h-24 resize-none pb-12"
+          className="min-h-24 resize-none pb-10"
           disabled={isSubmitting}
           name="prompt"
           onChange={(event) => {
             setPrompt(event.currentTarget.value);
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               if (isSubmitDisabled) return;
               event.currentTarget.form?.requestSubmit();
