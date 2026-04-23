@@ -153,6 +153,7 @@ function FollowUpForm({ className }: { className?: string }) {
       ref={formRef}
     >
       <Input
+        autoFocus
         disabled={isSubmitting}
         name="prompt"
         placeholder="Follow up"
