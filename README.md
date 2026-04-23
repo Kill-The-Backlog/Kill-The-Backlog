@@ -2,9 +2,13 @@
 
 Self-hosted agent runner for your GitHub repos. Connect a repo, kick off coding agents in cloud sandboxes, and get PRs back — no local checkout required.
 
+![Kill The Backlog session](docs/screenshot.png)
+
+Each session spins up an E2B sandbox, clones your repo, runs [opencode](https://opencode.ai) against your prompt, then pushes commits to a fresh branch and opens a draft PR on GitHub — all streamed back to the session page in realtime.
+
 ## Quick Start
 
-Run locally with Docker in under 5 minutes. The only prerequisite is [Docker](https://docs.docker.com/get-docker/).
+Run locally with Docker in under 5 minutes. You'll need [Docker](https://docs.docker.com/get-docker/) and [Node.js 22+](https://nodejs.org/) (to build the E2B sandbox template).
 
 ### 1. Clone and configure
 
@@ -32,16 +36,28 @@ GITHUB_OAUTH_CLIENT_SECRET=your_client_secret
 
 ### 3. Add AI provider keys
 
-Agents run inside [E2B](https://e2b.dev/) cloud sandboxes and use [Anthropic](https://console.anthropic.com/) for coding. Add both keys to your `.env`:
+Each session boots an [E2B](https://e2b.dev/) sandbox running [opencode](https://opencode.ai/) headless, with [Anthropic](https://console.anthropic.com/) as the model provider. Add both keys to your `.env`:
 
 ```
 ANTHROPIC_API_KEY=your_key
 E2B_API_KEY=your_key
 ```
 
-Both services have free tiers that are enough to try things out.
+Both services have free tiers that are enough to try things out. `E2B_TEMPLATE_NAME` is already set to `e2b-template-dev` in `.env.example` — you'll publish a template under that name in the next step.
 
-### 4. Start
+### 4. Build the E2B sandbox template
+
+Sessions launch from a custom E2B template (opencode pre-installed). Publish it once to your E2B account:
+
+```sh
+corepack enable pnpm
+pnpm install
+pnpm tools:e2b-template e2b:build:dev
+```
+
+This takes a few minutes the first time. It tags the template as `e2b-template-dev` in your E2B account, matching `E2B_TEMPLATE_NAME` from the previous step.
+
+### 5. Start
 
 ```sh
 docker compose up
@@ -53,20 +69,24 @@ The first run builds the app image and may take a few minutes. Once you see `Ser
 
 ## Developing
 
-### With Devbox (recommended)
-
 This project uses [Devbox](https://www.jetify.com/devbox) to manage system-level dependencies (Node.js 22, PostgreSQL 18, Valkey, nginx, mkcert).
 
-#### First-time setup
+### First-time setup
 
 ```sh
 devbox shell
 ./setup-devbox.sh
 ```
 
-Create a GitHub OAuth App with callback URL `https://ktb.localhost/auth/github/callback` and add the credentials to your `.env`. Infrastructure variables (DB URL, Redis, Zero, etc.) are set automatically by `process-compose.yaml`.
+Create a GitHub OAuth App with callback URL `https://ktb.localhost/auth/github/callback` and add the credentials to your `.env`. A GitHub OAuth App only allows one callback URL, so if you already created one for the Quick Start (`http://localhost:3000/...`), register a second app here. Infrastructure variables (DB URL, Redis, Zero, etc.) are set automatically by `process-compose.yaml`.
 
-#### Day-to-day development
+If you didn't already publish the E2B sandbox template during the Quick Start, do it now:
+
+```sh
+devbox run pnpm tools:e2b-template e2b:build:dev
+```
+
+### Day-to-day development
 
 ```sh
 devbox services up
@@ -74,50 +94,27 @@ devbox services up
 
 This starts nginx (HTTPS), PostgreSQL, Valkey, the app, Zero cache, and the marketing site. Open [**https://ktb.localhost**](https://ktb.localhost).
 
-### With Docker + local Node
-
-If you prefer not to use Devbox, you can run infrastructure in Docker and the app locally:
-
-```sh
-docker compose up postgres valkey -d
-```
-
-Add these to your `.env` (alongside the GitHub OAuth credentials from the quick start):
-
-```sh
-DB_URL=postgres://ktb:ktb@localhost:5432/ktb
-GITHUB_OAUTH_REDIRECT_URI=http://localhost:5173/auth/github/callback
-MAIN_ORIGIN=http://localhost:5173
-REDIS_URL=redis://localhost:6379
-ZERO_CACHE_URL=http://localhost:4848
-```
-
-Then install dependencies, run migrations, and start the dev server:
-
-```sh
-corepack enable pnpm
-pnpm install
-pnpm turbo build
-pnpm prisma migrate deploy
-pnpm apps:main dev
-```
-
-> **Note:** This setup doesn't include Zero cache, so updates won't appear in realtime (a page refresh will pick them up). Use Devbox for the full experience.
-
 ---
 
 ## Architecture
 
-| Component                       | Role                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------- |
-| **Main app** (`apps/main`)      | React Router 7 + Express. Agent management UI, GitHub OAuth, BullMQ workers       |
-| **Marketing site** (`apps/www`) | Astro static site                                                                 |
-| **PostgreSQL**                  | Primary database (Prisma migrations, Kysely queries)                              |
-| **Valkey**                      | Redis-compatible store for BullMQ job queues                                      |
-| **Zero cache**                  | [Rocicorp Zero](https://zero.rocicorp.dev) — realtime sync between DB and browser |
+| Component                                | Role                                                                                                                  |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Main app** (`apps/main`)               | React Router 7 + Express. Session UI, GitHub OAuth, BullMQ workers (session bootstrapper, event pump, session titler) |
+| **E2B sandboxes** (`tools/e2b-template`) | Per-session VMs launched from a custom template running [opencode](https://opencode.ai) headless over HTTP + SSE      |
+| **Marketing site** (`apps/www`)          | Astro static site                                                                                                     |
+| **PostgreSQL**                           | Primary database (Prisma migrations, Kysely queries)                                                                  |
+| **Valkey**                               | Redis-compatible store for BullMQ job queues                                                                          |
+| **Zero cache**                           | [Rocicorp Zero](https://zero.rocicorp.dev) — realtime sync between DB and browser                                     |
 
 ---
 
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+## License
+
+[AGPL-3.0-or-later](LICENSE)
