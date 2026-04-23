@@ -3,6 +3,7 @@ import type { QueryRowType } from "@rocicorp/zero";
 import type { queries } from "#zero/queries.js";
 
 import { Alert, AlertDescription } from "#components/ui/alert.js";
+import { useStickyScroll } from "#hooks/use-sticky-scroll.js";
 import { cn } from "#lib/utils/cn.js";
 
 import type { TimelineItem } from "./timeline.js";
@@ -22,9 +23,13 @@ export function Messages({
   session: SessionRow;
 }) {
   const timeline = buildTimeline(session.messages);
+  const contentRef = useStickyScroll<HTMLDivElement>();
 
   return (
-    <div className={cn("flex flex-col gap-3 text-sm", className)}>
+    <div
+      className={cn("flex flex-col gap-3 text-sm", className)}
+      ref={contentRef}
+    >
       {timeline.map(renderTimelineItem)}
 
       {session.errorMessage && (

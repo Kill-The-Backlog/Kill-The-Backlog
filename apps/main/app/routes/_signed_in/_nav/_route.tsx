@@ -67,11 +67,11 @@ function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg">
+            <SidebarMenuButton asChild className="gap-1">
               <Link draggable={false} to="/">
-                <SwordIcon className="text-primary" weight="fill" />
-                <span className="font-heading text-xs font-semibold tracking-tight">
-                  Kill The Backlog
+                <SwordIcon weight="fill" />
+                <span className="text-sm font-semibold tracking-tight">
+                  KTB
                 </span>
               </Link>
             </SidebarMenuButton>
@@ -97,7 +97,6 @@ function SessionList() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Recent</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {sessions.map((session) => (

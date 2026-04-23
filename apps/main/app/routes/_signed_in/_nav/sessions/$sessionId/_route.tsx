@@ -100,7 +100,15 @@ export default function Route({ params }: Route.ComponentProps) {
         </span>
       </HeaderSlot>
       {/* Page */}
-      <div className="flex flex-1 justify-center px-4 py-8">
+      <div
+        className="flex flex-1 justify-center px-4 py-8"
+        /* Remount the whole page subtree on session change so every child's
+          per-session state resets in one place: Messages' sticky-scroll
+          anchor, Details' mount-time animation gates, and FollowUpForm's
+          input value (which the browser would otherwise preserve across
+          navigations). */
+        key={session.id}
+      >
         {/* Content */}
         <div className="flex w-full max-w-5xl gap-8">
           {/* Messages */}
@@ -111,8 +119,6 @@ export default function Route({ params }: Route.ComponentProps) {
           {/* Details */}
           <Details
             className="sticky top-8 hidden w-64 shrink-0 self-start lg:flex"
-            // Remount on session change so Details' per-session state resets.
-            key={session.id}
             session={session}
           />
         </div>
