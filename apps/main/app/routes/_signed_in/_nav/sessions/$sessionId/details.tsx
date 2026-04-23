@@ -1,6 +1,7 @@
 import type { QueryRowType } from "@rocicorp/zero";
 
 import { GitPullRequestIcon } from "@phosphor-icons/react";
+import { useRef } from "react";
 import invariant from "tiny-invariant";
 
 import type { queries } from "#zero/queries.js";
@@ -22,6 +23,11 @@ export function Details({
   const { user } = useRootLoaderData();
   invariant(user, "User is required");
 
+  // The parent route remounts `Details` on session change via `key`, so this
+  // captures whether the PR was already present when the user landed on this
+  // session — allowing us to animate only when one *appears* mid-session.
+  const hadPrOnMountRef = useRef(session.prNumber !== null);
+
   return (
     <aside
       className={cn(
@@ -42,7 +48,10 @@ export function Details({
 
       {session.prNumber !== null && (
         <a
-          className="animate-in fade-in-0 flex items-center gap-2 duration-500 hover:underline"
+          className={cn(
+            "flex items-center gap-2 hover:underline",
+            !hadPrOnMountRef.current && "animate-in fade-in-0 duration-500",
+          )}
           href={`https://github.com/${session.repoFullName}/pull/${session.prNumber}`}
           rel="noopener noreferrer"
           target="_blank"
