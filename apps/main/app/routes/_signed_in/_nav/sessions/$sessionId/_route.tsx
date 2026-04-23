@@ -129,7 +129,12 @@ export default function Route({ params }: Route.ComponentProps) {
 
 function Composer({ className }: { className?: string }) {
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
-  const isSubmitting = fetcher.state !== "idle";
+  // Only reflect the active server round-trip — not the post-action
+  // revalidation ("loading"). Keeping the textarea enabled during
+  // revalidation lets the below effect's `focus()` actually take effect
+  // (focusing a disabled element is a silent no-op) and lets the user
+  // start typing their next prompt as soon as the server responds.
+  const isSubmitting = fetcher.state === "submitting";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [prompt, setPrompt] = useState("");
   const isSubmitDisabled = isSubmitting || !prompt.trim();
