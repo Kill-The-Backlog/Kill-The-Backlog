@@ -1,6 +1,6 @@
 import { ArrowUpIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { data, redirect, useFetcher } from "react-router";
+import { data, redirect, useFetcher, useLoaderData } from "react-router";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -24,9 +24,34 @@ const requestSchema = z.object({
     .regex(/^[^/]+\/[^/]+$/, "Repository must be in owner/name form"),
 });
 
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const { user } = await requireUser(context);
+
+  const dbUser = await db
+    .selectFrom("User")
+    .select("selectedRepoFullName")
+    .where("id", "=", user.id)
+    .executeTakeFirst();
+
+  return { selectedRepoFullName: dbUser?.selectedRepoFullName ?? null };
+};
+
 export const action = async ({ context, request }: Route.ActionArgs) => {
   const { user } = await requireUser(context);
   const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "selectRepo") {
+    const repoFullName = formData.get("repoFullName") as string | null;
+
+    await db
+      .updateTable("User")
+      .set({ selectedRepoFullName: repoFullName })
+      .where("id", "=", user.id)
+      .execute();
+
+    return { success: true };
+  }
 
   const result = requestSchema.safeParse(Object.fromEntries(formData));
   if (!result.success) {
@@ -49,15 +74,6 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
     })
     .execute();
 
-  // Kicks off session bootstrap (sandbox + opencode session) and the
-  // initial-prompt dispatch in a background job. The bootstrapper enqueues
-  // the event pump once the sandbox is ready, so follow-ups can start
-  // streaming as soon as the pump picks up. This action returns
-  // immediately after enqueuing — the session page subscribes to events
-  // via Zero. The titler runs in parallel: it doesn't need the sandbox and
-  // finishes well before bootstrap, so the sidebar gets a friendly title
-  // shortly after creation. A titler failure won't affect session usability
-  // — the sidebar falls back to the raw prompt.
   await Promise.all([
     sessionBootstrapperWorker.enqueue(
       {
@@ -79,6 +95,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
 
 export default function Route() {
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
+  const { selectedRepoFullName } = useLoaderData<typeof loader>();
   const isSubmitting = fetcher.state !== "idle";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepoItem | null>(null);
@@ -91,6 +108,14 @@ export default function Route() {
       textareaRef.current?.focus();
     }
   }, [fetcher.data]);
+
+  const handleRepoChange = (repo: GitHubRepoItem) => {
+    setSelectedRepo(repo);
+    fetcher.submit(
+      { intent: "selectRepo", repoFullName: repo.fullName },
+      { method: "post" },
+    );
+  };
 
   return (
     <div className="flex h-full flex-col items-center justify-center px-4">
@@ -124,7 +149,8 @@ export default function Route() {
 
         <RepoPicker
           className="absolute bottom-1.5 left-1.5"
-          onChange={setSelectedRepo}
+          initialFullName={selectedRepoFullName}
+          onChange={handleRepoChange}
           value={selectedRepo}
         />
         <Button
