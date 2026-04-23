@@ -127,3 +127,8 @@ pnpm apps:main dev
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+Q: Why do programmers always mix up Halloween and Christmas?  
+A: Because Oct 31 = Dec 25.
