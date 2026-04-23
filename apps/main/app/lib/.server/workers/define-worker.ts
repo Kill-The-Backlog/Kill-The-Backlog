@@ -129,16 +129,10 @@ export const defineWorker = <
       await existingJob.remove();
     }
 
-    // Casts needed due to BullMQ's ExtractNameType/ExtractDataType inference
-    type Add = typeof queue.add;
-    return queue.add(
-      name as unknown as Parameters<Add>[0],
-      data as Parameters<Add>[1],
-      {
-        ...jobOptions,
-        jobId,
-      },
-    );
+    return queue.add(name, data, {
+      ...jobOptions,
+      jobId,
+    });
   };
 
   const getJobStatus = async (jobId: string) => {
