@@ -127,3 +127,7 @@ pnpm apps:main dev
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+Why did the kanban board go to therapy? Because it had too many emotional attachments to its backlog. 😭
