@@ -127,3 +127,9 @@ pnpm apps:main dev
 ## Deploying
 
 See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with werf.
+
+---
+
+Why do programmers prefer a kanban board over a todo list?
+
+Because a todo list tells you what to do, but a kanban board tells you what you *haven't* done yet.
