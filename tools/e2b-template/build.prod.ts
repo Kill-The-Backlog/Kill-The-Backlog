@@ -4,6 +4,7 @@ import { template } from "./template.ts";
 
 async function main() {
   await Template.build(template, "e2b-template", {
+    memoryMB: 2048,
     onBuildLogs: defaultBuildLogger(),
   });
 }
