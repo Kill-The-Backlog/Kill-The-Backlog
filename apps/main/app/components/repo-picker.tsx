@@ -32,16 +32,19 @@ export type { GitHubRepoItem };
 
 export function RepoPicker({
   className,
+  initialFullName,
   onChange,
   value,
 }: {
   className?: string;
+  initialFullName?: string | null;
   onChange: (repo: GitHubRepoItem) => void;
   value: GitHubRepoItem | null;
 }) {
   const [open, setOpen] = useState(false);
   const fetcher = useFetcher<typeof reposLoader>();
   const hasFetched = useRef(false);
+  const initialSelected = useRef(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +56,22 @@ export function RepoPicker({
 
   const repos = fetcher.data?.repos;
   const isLoading = fetcher.state === "loading" || (open && !repos);
+
+  useEffect(() => {
+    if (
+      !initialSelected.current &&
+      initialFullName &&
+      !value &&
+      repos &&
+      repos.length > 0
+    ) {
+      initialSelected.current = true;
+      const matchedRepo = repos.find((r) => r.fullName === initialFullName);
+      if (matchedRepo) {
+        onChange(matchedRepo);
+      }
+    }
+  }, [initialFullName, repos, value, onChange]);
 
   return (
     <>
