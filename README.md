@@ -118,3 +118,7 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 ## License
 
 [AGPL-3.0-or-later](LICENSE)
+
+---
+
+Why do developers prefer dark mode? Because light attracts bugs.
