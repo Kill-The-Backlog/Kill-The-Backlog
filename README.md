@@ -127,3 +127,7 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 ---
 > Why do Java developers wear glasses?
 > Because they can't C#!
+
+---
+> Why do programmers always mix up Halloween and Christmas?
+> Because Oct 31 = Dec 25.
