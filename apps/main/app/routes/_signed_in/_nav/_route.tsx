@@ -118,23 +118,27 @@ function SessionList() {
 }
 
 function UserInfo({
+  showEmail,
   user,
 }: {
+  showEmail: boolean;
   user: Pick<Selectable<User>, "avatarUrl" | "displayName" | "email">;
 }) {
   return (
-    <>
+    <div className="flex items-center gap-2">
       <Avatar size="sm">
         <AvatarImage alt={user.displayName} src={user.avatarUrl ?? undefined} />
         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
       </Avatar>
-      <div className="grid flex-1 text-left text-xs leading-tight">
-        <span className="truncate font-medium">{user.displayName}</span>
-        <span className="text-muted-foreground text-2xs truncate">
-          {user.email}
-        </span>
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate text-xs font-medium">{user.displayName}</span>
+        {showEmail && (
+          <span className="text-muted-foreground truncate text-xs">
+            {user.email}
+          </span>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -155,11 +159,8 @@ function UserMenu() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              size="lg"
-            >
-              <UserInfo user={user} />
+            <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              <UserInfo showEmail={false} user={user} />
               <CaretUpDownIcon className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -168,11 +169,9 @@ function UserMenu() {
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
             side="top"
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-xs">
-                <UserInfo user={user} />
-              </div>
-            </DropdownMenuLabel>
+            <div className="px-1 py-1.5">
+              <UserInfo showEmail={true} user={user} />
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link draggable={false} onClick={handleSignOut} to="/sign-out">
