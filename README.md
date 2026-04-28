@@ -118,3 +118,8 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 ## License
 
 [AGPL-3.0-or-later](LICENSE)
+
+---
+
+Q: Why do programmers always mix up Halloween and Christmas?
+A: Because Oct 31 = Dec 25.
