@@ -123,3 +123,6 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 
 > Why do programmers prefer dark mode?
 > Because light attracts bugs.
+
+> What's a programmer's favorite place to go on vacation?
+> Ruby on Rails.
