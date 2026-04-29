@@ -118,3 +118,11 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 ## License
 
 [AGPL-3.0-or-later](LICENSE)
+
+---
+
+## Joke
+
+Why did the coding agent quit its job?
+
+It got tired of all the backlogs.
