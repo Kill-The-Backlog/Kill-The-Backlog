@@ -1,7 +1,8 @@
-import { CaretUpDownIcon, StarFourIcon } from "@phosphor-icons/react";
+import { CaretUpDownIcon } from "@phosphor-icons/react";
 
 import type { ModelId } from "#lib/opencode/models.js";
 
+import ClaudeMark from "#assets/claude-mark.svg?react";
 import { Button } from "#components/ui/button.js";
 import {
   DropdownMenu,
@@ -10,7 +11,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu.js";
-import { MODELS } from "#lib/opencode/models.js";
+import { getModelLabel, MODELS } from "#lib/opencode/models.js";
 
 export function ModelPicker({
   className,
@@ -25,8 +26,8 @@ export function ModelPicker({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className={className} type="button" variant="secondary">
-          <StarFourIcon data-icon="inline-start" />
-          {MODELS.find((model) => model.id === value)?.label}
+          <ClaudeMark data-icon="inline-start" />
+          {getModelLabel(value)}
           <CaretUpDownIcon data-icon="inline-end" />
         </Button>
       </DropdownMenuTrigger>

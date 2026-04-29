@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import GitHubIcon from "#assets/github-mark.svg?react";
+import GithubMark from "#assets/github-mark.svg?react";
 import { Button } from "#components/ui/button.js";
 
 export default function Route() {
@@ -12,7 +12,7 @@ export default function Route() {
         </h1>
         <Button asChild size="lg" variant="outline">
           <Link to="/auth/github">
-            <GitHubIcon />
+            <GithubMark />
             Continue with GitHub
           </Link>
         </Button>

@@ -37,6 +37,14 @@ export function assertModelId(value: string): ModelId {
   return value as ModelId;
 }
 
+// Looks up a human-readable label for a raw model id from the DB. Falls back
+// to the raw value so a stale `Session.model` (e.g. a model removed from
+// `MODELS` while old sessions still reference it) renders something rather
+// than crashing the UI.
+export function getModelLabel(value: string): string {
+  return MODELS.find((model) => model.id === value)?.label ?? value;
+}
+
 // Resolves a `ModelId` into the `{ providerID, modelID }` shape opencode's
 // SDK expects for `session.promptAsync`. The lookup can't fail at runtime
 // because `ModelId` is constrained to ids that exist in `MODELS`.

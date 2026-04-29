@@ -6,7 +6,9 @@ import invariant from "tiny-invariant";
 
 import type { queries } from "#zero/queries.js";
 
+import ClaudeMark from "#assets/claude-mark.svg?react";
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
+import { getModelLabel } from "#lib/opencode/models.js";
 import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
@@ -28,6 +30,8 @@ export function Details({
   // session — allowing us to animate only when one *appears* mid-session.
   const hadPrOnMountRef = useRef(session.prNumber !== null);
 
+  const modelLabel = getModelLabel(session.model);
+
   return (
     <aside
       className={cn(
@@ -43,7 +47,12 @@ export function Details({
           />
           <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
         </Avatar>
-        <span>1 prompt engineer</span>
+        <span className="truncate">1 prompt engineer</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <ClaudeMark className="size-4" />
+        <span className="truncate">{modelLabel}</span>
       </div>
 
       {session.prNumber !== null && (
