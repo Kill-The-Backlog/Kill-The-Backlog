@@ -121,5 +121,10 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 
 ---
 
+> Why do Java developers wear glasses?
+> Because they can't C#.
+
+---
+
 > Why do programmers prefer dark mode?
 > Because light attracts bugs.
