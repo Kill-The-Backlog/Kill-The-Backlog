@@ -2,10 +2,11 @@ import { ArrowUpIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { data, redirect, useFetcher } from "react-router";
 import { toast } from "sonner";
+import invariant from "tiny-invariant";
 import { z } from "zod";
 
-import type { GitHubRepoItem } from "#components/repo-picker.js";
 import type { ModelId } from "#lib/opencode/models.js";
+import type { GitHubRepoItem } from "#routes/_signed_in/api/repos/_index/_route.js";
 
 import { BranchPicker } from "#components/branch-picker.js";
 import { ModelPicker } from "#components/model-picker.js";
@@ -14,7 +15,8 @@ import { Button } from "#components/ui/button.js";
 import { Textarea } from "#components/ui/textarea.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { MODEL_IDS } from "#lib/opencode/models.js";
+import { MODEL_IDS, MODELS } from "#lib/opencode/models.js";
+import { submitPrefs } from "#lib/user-preferences/submit-prefs.js";
 import { sessionBootstrapperWorker } from "#workers/.server/session-bootstrapper/index.js";
 import { sessionTitlerWorker } from "#workers/.server/session-titler/index.js";
 
@@ -31,6 +33,25 @@ const requestSchema = z.object({
     .min(1, "Repository is required")
     .regex(/^[^/]+\/[^/]+$/, "Repository must be in owner/name form"),
 });
+
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const { user } = await requireUser(context);
+  const prefs = await db
+    .selectFrom("UserPreferences")
+    .select(["lastBaseBranch", "lastModel", "lastRepoFullName"])
+    .where("userId", "=", user.id)
+    .executeTakeFirst();
+
+  // Always synthesize a row so consumers don't need a top-level null check —
+  // only field-level optional handling.
+  return {
+    preferences: prefs ?? {
+      lastBaseBranch: null,
+      lastModel: null,
+      lastRepoFullName: null,
+    },
+  };
+};
 
 export const action = async ({ context, request }: Route.ActionArgs) => {
   const { user } = await requireUser(context);
@@ -89,23 +110,55 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   throw redirect(`/sessions/${sessionId}`);
 };
 
-export default function Route() {
+export default function Route({ loaderData }: Route.ComponentProps) {
+  const { preferences } = loaderData;
+
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
   const isSubmitting = fetcher.state !== "idle";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [selectedRepo, setSelectedRepo] = useState<GitHubRepoItem | null>(null);
-  const [selectedBranch, setSelectedBranch] = useState<null | string>(null);
-  const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
+
+  const [selectedRepoFullName, setSelectedRepoFullName] = useState(
+    preferences.lastRepoFullName,
+  );
+  const [selectedBranch, setSelectedBranch] = useState(
+    preferences.lastBaseBranch,
+  );
+  const [selectedModel, setSelectedModel] = useState(
+    MODELS.find((m) => m.id === preferences.lastModel)?.id ?? DEFAULT_MODEL,
+  );
   const [prompt, setPrompt] = useState("");
+
   const isSubmitDisabled =
-    !selectedRepo || !selectedBranch || isSubmitting || !prompt.trim();
+    !selectedRepoFullName || !selectedBranch || isSubmitting || !prompt.trim();
 
   const handleSelectRepo = (repo: GitHubRepoItem) => {
-    setSelectedRepo(repo);
+    setSelectedRepoFullName(repo.fullName);
     // Default the branch to the repo's default branch on selection so the
     // user can submit immediately. They can still pick a different branch
     // afterwards.
     setSelectedBranch(repo.defaultBranch);
+    submitPrefs({
+      lastBaseBranch: repo.defaultBranch,
+      lastRepoFullName: repo.fullName,
+    });
+  };
+
+  const handleSelectBranch = (branch: string) => {
+    // The BranchPicker is disabled until a repo is selected, so this is
+    // unreachable in practice — but writing the branch without the repo
+    // would let a racing repo write leave the persisted row pointing at a
+    // branch from a different repo.
+    invariant(selectedRepoFullName, "Branch picked without a repo");
+    setSelectedBranch(branch);
+    submitPrefs({
+      lastBaseBranch: branch,
+      lastRepoFullName: selectedRepoFullName,
+    });
+  };
+
+  const handleSelectModel = (model: ModelId) => {
+    setSelectedModel(model);
+    submitPrefs({ lastModel: model });
   };
 
   useEffect(() => {
@@ -137,11 +190,11 @@ export default function Route() {
           value={prompt}
         />
 
-        {selectedRepo && (
+        {selectedRepoFullName && (
           <input
             name="repoFullName"
             type="hidden"
-            value={selectedRepo.fullName}
+            value={selectedRepoFullName}
           />
         )}
         {selectedBranch && (
@@ -153,19 +206,18 @@ export default function Route() {
           <RepoPicker
             className="pointer-events-auto"
             onChange={handleSelectRepo}
-            value={selectedRepo}
+            value={selectedRepoFullName}
           />
           <BranchPicker
             className="pointer-events-auto"
-            defaultBranch={selectedRepo?.defaultBranch ?? null}
-            onChange={setSelectedBranch}
-            repoFullName={selectedRepo?.fullName ?? null}
+            onChange={handleSelectBranch}
+            repoFullName={selectedRepoFullName}
             value={selectedBranch}
           />
 
           <ModelPicker
             className="pointer-events-auto ml-auto"
-            onChange={setSelectedModel}
+            onChange={handleSelectModel}
             value={selectedModel}
           />
           {/* Wrapping in a div with `pointer-events-auto` prevents disabled

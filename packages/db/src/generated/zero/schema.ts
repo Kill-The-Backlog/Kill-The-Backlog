@@ -24,6 +24,17 @@ export const userTable = table("User")
   })
   .primaryKey("id");
 
+export const userPreferencesTable = table("UserPreferences")
+  .columns({
+    userId: number(),
+    lastRepoFullName: string().optional(),
+    lastBaseBranch: string().optional(),
+    lastModel: string().optional(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey("userId");
+
 export const gitHubAccountTable = table("GitHubAccount")
   .columns({
     id: number(),
@@ -90,6 +101,18 @@ export const userTableRelationships = relationships(userTable, ({ one, many }) =
     sourceField: ["id"],
     destField: ["userId"],
     destSchema: sessionTable,
+  }),
+  userPreferences: one({
+    sourceField: ["id"],
+    destField: ["userId"],
+    destSchema: userPreferencesTable,
+  })
+}));
+export const userPreferencesTableRelationships = relationships(userPreferencesTable, ({ one }) => ({
+  user: one({
+    sourceField: ["userId"],
+    destField: ["id"],
+    destSchema: userTable,
   })
 }));
 export const gitHubAccountTableRelationships = relationships(gitHubAccountTable, ({ one }) => ({
@@ -137,6 +160,7 @@ export const sessionMessagePartTableRelationships = relationships(sessionMessage
 export const schema = createSchema({
   tables: [
     userTable,
+    userPreferencesTable,
     gitHubAccountTable,
     sessionTable,
     sessionMessageTable,
@@ -144,6 +168,7 @@ export const schema = createSchema({
   ],
   relationships: [
     userTableRelationships,
+    userPreferencesTableRelationships,
     gitHubAccountTableRelationships,
     sessionTableRelationships,
     sessionMessageTableRelationships,

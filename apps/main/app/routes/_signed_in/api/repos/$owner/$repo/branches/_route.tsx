@@ -19,12 +19,14 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
     throw data({ error: "GitHub account not linked" }, { status: 422 });
   }
 
-  const branches = await fetchAllRepoBranches(
-    octokit,
-    params.owner,
-    params.repo,
-  );
-  return { branches };
+  // Fetch in parallel: the branches list and the repo metadata (just to read
+  // its default branch). The default branch is surfaced here so the picker
+  // can sort it first without the parent route having to thread it through.
+  const [branches, defaultBranch] = await Promise.all([
+    fetchAllRepoBranches(octokit, params.owner, params.repo),
+    fetchRepoDefaultBranch(octokit, params.owner, params.repo),
+  ]);
+  return { branches, defaultBranch };
 };
 
 async function fetchAllRepoBranches(
@@ -38,4 +40,13 @@ async function fetchAllRepoBranches(
   );
 
   return githubBranches.map((branch) => ({ name: branch.name }));
+}
+
+async function fetchRepoDefaultBranch(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+): Promise<string> {
+  const { data: repository } = await octokit.rest.repos.get({ owner, repo });
+  return repository.default_branch;
 }

@@ -28,13 +28,11 @@ import { Skeleton } from "#components/ui/skeleton.js";
 
 export function BranchPicker({
   className,
-  defaultBranch,
   onChange,
   repoFullName,
   value,
 }: {
   className?: string;
-  defaultBranch: null | string;
   onChange: (branchName: string) => void;
   repoFullName: null | string;
   value: null | string;
@@ -63,7 +61,7 @@ export function BranchPicker({
 
   const branches = fetcher.data?.branches;
   const sortedBranches = branches
-    ? sortBranchesByDefault(branches, defaultBranch)
+    ? sortBranchesByDefault(branches, fetcher.data?.defaultBranch ?? null)
     : undefined;
 
   if (!repoFullName) {

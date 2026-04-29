@@ -15,15 +15,26 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String
-  displayName   String
-  avatarUrl     String?
-  isStaff       Boolean        @default(false)
-  githubAccount GitHubAccount?
-  sessions      Session[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id              Int              @id @default(autoincrement())
+  email           String
+  displayName     String
+  avatarUrl       String?
+  isStaff         Boolean          @default(false)
+  githubAccount   GitHubAccount?
+  sessions        Session[]
+  userPreferences UserPreferences?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model UserPreferences {
+  userId           Int      @id
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastRepoFullName String?
+  lastBaseBranch   String?
+  lastModel        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model GitHubAccount {

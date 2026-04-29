@@ -58,10 +58,19 @@ export type User = {
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
+export type UserPreferences = {
+  userId: number;
+  lastRepoFullName: string | null;
+  lastBaseBranch: string | null;
+  lastModel: string | null;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
 export type DB = {
   GitHubAccount: GitHubAccount;
   Session: Session;
   SessionMessage: SessionMessage;
   SessionMessagePart: SessionMessagePart;
   User: User;
+  UserPreferences: UserPreferences;
 };

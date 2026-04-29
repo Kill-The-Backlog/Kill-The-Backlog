@@ -33,8 +33,6 @@ import { Skeleton } from "#components/ui/skeleton.js";
 import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 
-export type { GitHubRepoItem };
-
 export function RepoPicker({
   className,
   onChange,
@@ -42,7 +40,7 @@ export function RepoPicker({
 }: {
   className?: string;
   onChange: (repo: GitHubRepoItem) => void;
-  value: GitHubRepoItem | null;
+  value: null | string;
 }) {
   const [open, setOpen] = useState(false);
   const fetcher = useFetcher<typeof reposLoader>();
@@ -66,7 +64,7 @@ export function RepoPicker({
         variant="secondary"
       >
         <GithubLogoIcon data-icon="inline-start" />
-        {value ? value.fullName : "Select a repository"}
+        {value ?? "Select a repository"}
         <CaretUpDownIcon data-icon="inline-end" />
       </Button>
       <CommandDialog
@@ -76,7 +74,7 @@ export function RepoPicker({
         open={open}
         title="Select a repository"
       >
-        <Command value={value?.fullName}>
+        <Command value={value ?? undefined}>
           <CommandInput placeholder="Search repositories..." />
           <CommandList>
             {isLoading ? (
@@ -85,7 +83,7 @@ export function RepoPicker({
               <>
                 <CommandEmpty>No repositories match your search.</CommandEmpty>
                 {repos.map((repo) => {
-                  const isSelected = repo.fullName === value?.fullName;
+                  const isSelected = repo.fullName === value;
                   return (
                     <CommandItem
                       key={repo.githubRepoId}
