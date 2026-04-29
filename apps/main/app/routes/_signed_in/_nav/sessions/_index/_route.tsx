@@ -5,20 +5,26 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import type { GitHubRepoItem } from "#components/repo-picker.js";
+import type { ModelId } from "#lib/opencode/models.js";
 
 import { BranchPicker } from "#components/branch-picker.js";
+import { ModelPicker } from "#components/model-picker.js";
 import { RepoPicker } from "#components/repo-picker.js";
 import { Button } from "#components/ui/button.js";
 import { Textarea } from "#components/ui/textarea.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
+import { MODEL_IDS } from "#lib/opencode/models.js";
 import { sessionBootstrapperWorker } from "#workers/.server/session-bootstrapper/index.js";
 import { sessionTitlerWorker } from "#workers/.server/session-titler/index.js";
 
 import type { Route } from "./+types/_route";
 
+const DEFAULT_MODEL: ModelId = "claude-opus-4-7";
+
 const requestSchema = z.object({
   baseBranch: z.string().min(1, "Branch is required"),
+  model: z.enum(MODEL_IDS),
   prompt: z.string().min(1, "Prompt is required"),
   repoFullName: z
     .string()
@@ -46,6 +52,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
       baseBranch: result.data.baseBranch,
       id: sessionId,
       initialPrompt: result.data.prompt,
+      model: result.data.model,
       repoFullName: result.data.repoFullName,
       updatedAt: new Date(),
       userId: user.id,
@@ -66,6 +73,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
       {
         baseBranch: result.data.baseBranch,
         initialPrompt: result.data.prompt,
+        model: result.data.model,
         repoFullName: result.data.repoFullName,
         sessionId,
         userId: user.id,
@@ -87,6 +95,7 @@ export default function Route() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepoItem | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<null | string>(null);
+  const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
   const [prompt, setPrompt] = useState("");
   const isSubmitDisabled =
     !selectedRepo || !selectedBranch || isSubmitting || !prompt.trim();
@@ -138,24 +147,35 @@ export default function Route() {
         {selectedBranch && (
           <input name="baseBranch" type="hidden" value={selectedBranch} />
         )}
+        <input name="model" type="hidden" value={selectedModel} />
 
-        <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5">
-          <RepoPicker onChange={handleSelectRepo} value={selectedRepo} />
+        <div className="pointer-events-none absolute inset-x-1.5 bottom-1.5 flex items-center gap-0.5">
+          <RepoPicker
+            className="pointer-events-auto"
+            onChange={handleSelectRepo}
+            value={selectedRepo}
+          />
           <BranchPicker
+            className="pointer-events-auto"
             defaultBranch={selectedRepo?.defaultBranch ?? null}
             onChange={setSelectedBranch}
             repoFullName={selectedRepo?.fullName ?? null}
             value={selectedBranch}
           />
+
+          <ModelPicker
+            className="pointer-events-auto ml-auto"
+            onChange={setSelectedModel}
+            value={selectedModel}
+          />
+          {/* Wrapping in a div with `pointer-events-auto` prevents disabled
+              buttons from allowing clicks to pass through to the textarea. */}
+          <div className="pointer-events-auto">
+            <Button disabled={isSubmitDisabled} size="icon" type="submit">
+              <ArrowUpIcon />
+            </Button>
+          </div>
         </div>
-        <Button
-          className="absolute right-1.5 bottom-1.5"
-          disabled={isSubmitDisabled}
-          size="icon"
-          type="submit"
-        >
-          <ArrowUpIcon />
-        </Button>
       </fetcher.Form>
     </div>
   );

@@ -112,7 +112,10 @@ export function RepoPicker({
                           </span>
                           {repo.isPrivate && <PrivateBadge />}
                           <CheckIcon
-                            className={cn("ml-auto", !isSelected && "opacity-0")}
+                            className={cn(
+                              "ml-auto",
+                              !isSelected && "opacity-0",
+                            )}
                             data-slot="command-item-check"
                           />
                         </div>

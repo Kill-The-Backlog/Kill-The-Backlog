@@ -45,6 +45,7 @@ model Session {
   title             String?
   repoFullName      String
   baseBranch        String
+  model             String
   e2bSandboxId      String?
   opencodeSessionId String?
   prNumber          Int?

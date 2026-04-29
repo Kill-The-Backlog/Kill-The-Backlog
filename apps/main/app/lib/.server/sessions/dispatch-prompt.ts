@@ -1,3 +1,5 @@
+import type { ModelId } from "#lib/opencode/models.js";
+
 import { sendPrompt } from "#lib/.server/opencode/send-prompt.js";
 import { sessionEventPumpWorker } from "#workers/.server/session-event-pump/index.js";
 
@@ -11,11 +13,13 @@ import { sessionEventPumpWorker } from "#workers/.server/session-event-pump/inde
 // lands — this ordering just keeps the race window as small as possible.
 export async function dispatchPrompt({
   e2bSandboxId,
+  model,
   opencodeSessionId,
   sessionId,
   text,
 }: {
   e2bSandboxId: string;
+  model: ModelId;
   opencodeSessionId: string;
   sessionId: string;
   text: string;
@@ -24,5 +28,5 @@ export async function dispatchPrompt({
     { sessionId },
     { jobId: sessionId, replaceFinished: true },
   );
-  await sendPrompt({ e2bSandboxId, opencodeSessionId, text });
+  await sendPrompt({ e2bSandboxId, model, opencodeSessionId, text });
 }

@@ -44,6 +44,7 @@ export const sessionTable = table("Session")
     title: string().optional(),
     repoFullName: string(),
     baseBranch: string(),
+    model: string(),
     e2bSandboxId: string().optional(),
     opencodeSessionId: string().optional(),
     prNumber: number().optional(),

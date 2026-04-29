@@ -1,6 +1,8 @@
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
 import { Sandbox } from "e2b";
 
+import type { ModelId } from "#lib/opencode/models.js";
+
 import { db } from "#lib/.server/clients/db.js";
 import { serverEnv } from "#lib/.server/env/server.js";
 import { formatError } from "#lib/.server/format-error.js";
@@ -16,6 +18,7 @@ import { defineWorker } from "#lib/.server/workers/define-worker.js";
 type JobData = {
   baseBranch: string;
   initialPrompt: string;
+  model: ModelId;
   repoFullName: string;
   sessionId: string;
   userId: number;
@@ -34,7 +37,7 @@ type JobData = {
 export const sessionBootstrapperWorker = defineWorker<JobData>(
   "session-bootstrapper",
   async (job) => {
-    const { baseBranch, initialPrompt, repoFullName, sessionId, userId } =
+    const { baseBranch, initialPrompt, model, repoFullName, sessionId, userId } =
       job.data;
 
     // Clear any prior errorMessage so a retry starts from a clean slate and
@@ -104,6 +107,24 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
       // don't need to re-set the directory.
       const client = createOpencodeClient({ baseUrl, directory: clonePath });
 
+      // Register the anthropic API key with the in-sandbox opencode runtime.
+      // The template doesn't bake any provider auth into the snapshot, so
+      // without this opencode has no `anthropic` provider registered and
+      // every prompt fails with `ProviderModelNotFoundError` — even though
+      // the model id is valid in the models.dev registry. Setting auth via
+      // the API both writes `~/.local/share/opencode/auth.json` and updates
+      // opencode's in-memory provider state, which is captured by E2B's
+      // pause/resume snapshot so it survives sandbox hibernation.
+      const authResult = await client.auth.set({
+        auth: { key: serverEnv.ANTHROPIC_API_KEY, type: "api" },
+        providerID: "anthropic",
+      });
+      if (authResult.error) {
+        throw new Error("Failed to set anthropic auth on opencode", {
+          cause: authResult.error,
+        });
+      }
+
       const opencodeSession = await client.session.create();
       if (opencodeSession.error) {
         throw new Error("Failed to create opencode session", {
@@ -118,6 +139,7 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
 
       await dispatchPrompt({
         e2bSandboxId: sandbox.sandboxId,
+        model,
         opencodeSessionId: opencodeSession.data.id,
         sessionId,
         text: initialPrompt,

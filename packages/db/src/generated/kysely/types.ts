@@ -21,6 +21,7 @@ export type Session = {
   title: string | null;
   repoFullName: string;
   baseBranch: string;
+  model: string;
   e2bSandboxId: string | null;
   opencodeSessionId: string | null;
   prNumber: number | null;

@@ -13,6 +13,7 @@ import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
+import { assertModelId } from "#lib/opencode/models.js";
 import { cn } from "#lib/utils/cn.js";
 import { queries } from "#zero/queries.js";
 
@@ -36,7 +37,7 @@ export const action = async ({
 
   const session = await db
     .selectFrom("Session")
-    .select(["id", "e2bSandboxId", "opencodeSessionId"])
+    .select(["id", "e2bSandboxId", "model", "opencodeSessionId"])
     .where("id", "=", sessionId)
     .where("userId", "=", user.id)
     .executeTakeFirst();
@@ -67,6 +68,7 @@ export const action = async ({
 
   await dispatchPrompt({
     e2bSandboxId: session.e2bSandboxId,
+    model: assertModelId(session.model),
     opencodeSessionId: session.opencodeSessionId,
     sessionId,
     text: result.data.prompt,

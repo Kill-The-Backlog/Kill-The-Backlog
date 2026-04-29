@@ -1,5 +1,9 @@
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
 
+import type { ModelId } from "#lib/opencode/models.js";
+
+import { resolveModel } from "#lib/opencode/models.js";
+
 import { opencodeBaseUrl } from "./base-url.js";
 
 // Posts a prompt to an opencode session running inside an E2B sandbox.
@@ -12,10 +16,12 @@ import { opencodeBaseUrl } from "./base-url.js";
 // route's auth query, the bootstrapper's freshly-created sandbox, etc.).
 export async function sendPrompt({
   e2bSandboxId,
+  model,
   opencodeSessionId,
   text,
 }: {
   e2bSandboxId: string;
+  model: ModelId;
   opencodeSessionId: string;
   text: string;
 }): Promise<void> {
@@ -24,6 +30,7 @@ export async function sendPrompt({
   });
 
   const result = await client.session.promptAsync({
+    model: resolveModel(model),
     parts: [{ text, type: "text" }],
     sessionID: opencodeSessionId,
   });
