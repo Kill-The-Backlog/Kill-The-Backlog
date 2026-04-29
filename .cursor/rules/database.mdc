@@ -15,13 +15,13 @@ alwaysApply: true
 Create a migration and generate types:
 
 ```bash
-devbox run pnpm prisma migrate dev --name <your-migration-name>
+devbox run -- 'pnpm prisma migrate dev --name <your-migration-name>'
 ```
 
 Then build the db package:
 
 ```bash
-devbox run turbo build --filter=@ktb/db
+devbox run -- 'turbo build --filter=@ktb/db'
 ```
 
 ## Kysely

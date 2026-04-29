@@ -14,13 +14,18 @@ When moving or renaming files, use `mv` in the shell instead of reading + writin
 
 ## Devbox
 
-This project uses Devbox for environment management. All commands (npm, pnpm, node, database commands, etc.) must be prefixed with `devbox run`.
+This project uses Devbox for environment management. All commands (npm, pnpm, node, database commands, etc.) must be wrapped as `devbox run -- '<command>'` — the whole command goes inside single quotes so devbox hands it to bash verbatim. This avoids two foot-guns: devbox claiming `--*` flags as its own (e.g. `--filter`), and devbox's `os.Expand` pass silently stripping `$VAR` patterns from args before the shell sees them.
 
 Examples:
 
-- `devbox run pnpm install`
-- `devbox run pnpm prisma migrate dev`
-- `devbox run node script.js`
+- `devbox run -- 'pnpm install'`
+- `devbox run -- 'pnpm prisma migrate dev'`
+- `devbox run -- 'node script.js'`
+- `devbox run -- 'pnpm --filter @ktb/main install'`
+
+Paths containing `$` (route params like `$sessionId`) need a `\$` escape — bash inside the single-quoted command honors it normally:
+
+- `devbox run -- 'pnpm --filter @ktb/main run lint:fix -- app/routes/_signed_in/_nav/sessions/\$sessionId/_route.tsx'`
 
 ## ESLint autofix
 
@@ -29,8 +34,8 @@ After finishing code changes, **always run `lint:fix` first** instead of manuall
 From the repo root, run `lint:fix` for a workspace package with `pnpm --filter` (for example `@ktb/main`, `@ktb/db`, `@ktb/shared`):
 
 - **Specific files** (paths relative to that package):  
-  `devbox run pnpm --filter @ktb/main run lint:fix -- app/routes/_signed_in/_nav/_route.tsx`
-- **Whole package:** `devbox run pnpm --filter @ktb/main run lint:fix`
+  `devbox run -- 'pnpm --filter @ktb/main run lint:fix -- app/routes/_signed_in/_nav/_route.tsx'`
+- **Whole package:** `devbox run -- 'pnpm --filter @ktb/main run lint:fix'`
 
 ## Current dev status
 
