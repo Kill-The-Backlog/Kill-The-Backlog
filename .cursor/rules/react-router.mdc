@@ -39,3 +39,37 @@ export const action = async ({ request }: Route.ActionArgs) => {
 ```
 
 Do not use `as` casts on `request.json()` — type the variable as `unknown` and validate with Zod.
+
+## Sharing Request Types with Clients
+
+When a client constructs the request body for an action, export the inferred Zod type from the route file and import it from the client. This keeps the wire contract single-sourced.
+
+```typescript
+// apps/main/app/routes/.../api/user-preferences/_route.tsx
+const requestSchema = z.object({
+  lastBaseBranch: z.string().min(1).optional(),
+  lastModel: z.enum(MODEL_IDS).optional(),
+});
+
+export type UserPreferencesPatch = z.infer<typeof requestSchema>;
+
+// apps/main/app/lib/user-preferences/submit-prefs.ts
+import type { UserPreferencesPatch } from "#routes/_signed_in/api/user-preferences/_route.js";
+
+export function submitPrefs(patch: UserPreferencesPatch) {
+  /* ... */
+}
+```
+
+Do not redeclare the body shape on the client. Schema changes should surface as type errors at the call site.
+
+## HTTP Methods for Action Endpoints
+
+Match the HTTP method to the action's semantics — don't default to POST for everything.
+
+- **POST** — create a new resource (e.g., "start a session")
+- **PATCH** — partial update of an existing resource (e.g., "update only the fields provided")
+- **PUT** — full replacement (rare; prefer PATCH unless you really mean it)
+- **DELETE** — remove a resource
+
+React Router actions accept any HTTP method.
