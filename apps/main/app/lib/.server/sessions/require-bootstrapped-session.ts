@@ -7,10 +7,12 @@ import { db } from "#lib/.server/clients/db.js";
 // prompt, event pump) need these IDs to be present, and crashing with a
 // clear message is the right behavior if they aren't — every entry point
 // that reaches this code path is only hit after the bootstrapper has
-// recorded both IDs. `repoFullName` and `userId` come along so the pump
-// can derive the sandbox clone path and resolve the owner's GitHub OAuth
-// token for commit / push / PR work without a second query.
+// recorded both IDs. `repoFullName`, `baseBranch`, and `userId` come along
+// so the pump can derive the sandbox clone path, target the user's chosen
+// branch as the PR base, and resolve the owner's GitHub OAuth token for
+// commit / push / PR work without a second query.
 export type BootstrappedSession = {
+  baseBranch: string;
   e2bSandboxId: string;
   opencodeSessionId: string;
   prNumber: null | number;
@@ -24,6 +26,7 @@ export async function requireBootstrappedSession(
   const row = await db
     .selectFrom("Session")
     .select([
+      "baseBranch",
       "e2bSandboxId",
       "opencodeSessionId",
       "prNumber",
@@ -40,6 +43,7 @@ export async function requireBootstrappedSession(
   );
 
   return {
+    baseBranch: row.baseBranch,
     e2bSandboxId: row.e2bSandboxId,
     opencodeSessionId: row.opencodeSessionId,
     prNumber: row.prNumber,

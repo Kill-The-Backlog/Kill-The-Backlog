@@ -20,6 +20,7 @@ export type Session = {
   initialPrompt: string;
   title: string | null;
   repoFullName: string;
+  baseBranch: string;
   e2bSandboxId: string | null;
   opencodeSessionId: string | null;
   prNumber: number | null;

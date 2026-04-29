@@ -48,9 +48,10 @@ export const sessionEventPumpWorker = defineWorker<JobData>(
       session = await requireBootstrappedSession(sessionId);
       const clonePath = clonePathForRepo(session.repoFullName);
       const branchName = branchNameForSession(sessionId);
-      // Capture into a const so the onIdle closure doesn't have to
+      // Capture into consts so the onIdle closure doesn't have to
       // re-narrow the outer `let session` on every invocation.
       const repoFullName = session.repoFullName;
+      const baseBranch = session.baseBranch;
 
       // Connect gives us a sandbox handle for git operations during the
       // pump (commit + push on idle). Paused VMs are resumed transparently —
@@ -92,6 +93,7 @@ export const sessionEventPumpWorker = defineWorker<JobData>(
           });
           if (!committed) return;
           prNumber = await pushAndEnsurePR({
+            baseBranch,
             branchName,
             clonePath,
             currentPrNumber: prNumber,

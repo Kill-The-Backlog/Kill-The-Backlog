@@ -22,6 +22,7 @@ import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 // value through a local mutable `let` so they don't need to re-query the
 // DB on every commit.
 export async function pushAndEnsurePR({
+  baseBranch,
   branchName,
   clonePath,
   currentPrNumber,
@@ -32,6 +33,7 @@ export async function pushAndEnsurePR({
   sandbox,
   sessionId,
 }: {
+  baseBranch: string;
   branchName: string;
   clonePath: string;
   currentPrNumber: null | number;
@@ -86,6 +88,7 @@ export async function pushAndEnsurePR({
 
   try {
     const pr = await createDraftPR({
+      base: baseBranch,
       body,
       head: branchName,
       octokit,

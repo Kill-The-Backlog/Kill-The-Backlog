@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import type { GitHubRepoItem } from "#components/repo-picker.js";
 
+import { BranchPicker } from "#components/branch-picker.js";
 import { RepoPicker } from "#components/repo-picker.js";
 import { Button } from "#components/ui/button.js";
 import { Textarea } from "#components/ui/textarea.js";
@@ -17,6 +18,7 @@ import { sessionTitlerWorker } from "#workers/.server/session-titler/index.js";
 import type { Route } from "./+types/_route";
 
 const requestSchema = z.object({
+  baseBranch: z.string().min(1, "Branch is required"),
   prompt: z.string().min(1, "Prompt is required"),
   repoFullName: z
     .string()
@@ -41,6 +43,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   await db
     .insertInto("Session")
     .values({
+      baseBranch: result.data.baseBranch,
       id: sessionId,
       initialPrompt: result.data.prompt,
       repoFullName: result.data.repoFullName,
@@ -61,6 +64,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   await Promise.all([
     sessionBootstrapperWorker.enqueue(
       {
+        baseBranch: result.data.baseBranch,
         initialPrompt: result.data.prompt,
         repoFullName: result.data.repoFullName,
         sessionId,
@@ -82,8 +86,18 @@ export default function Route() {
   const isSubmitting = fetcher.state !== "idle";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepoItem | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<null | string>(null);
   const [prompt, setPrompt] = useState("");
-  const isSubmitDisabled = !selectedRepo || isSubmitting || !prompt.trim();
+  const isSubmitDisabled =
+    !selectedRepo || !selectedBranch || isSubmitting || !prompt.trim();
+
+  const handleSelectRepo = (repo: GitHubRepoItem) => {
+    setSelectedRepo(repo);
+    // Default the branch to the repo's default branch on selection so the
+    // user can submit immediately. They can still pick a different branch
+    // afterwards.
+    setSelectedBranch(repo.defaultBranch);
+  };
 
   useEffect(() => {
     if (fetcher.data?.error) {
@@ -121,12 +135,19 @@ export default function Route() {
             value={selectedRepo.fullName}
           />
         )}
+        {selectedBranch && (
+          <input name="baseBranch" type="hidden" value={selectedBranch} />
+        )}
 
-        <RepoPicker
-          className="absolute bottom-1.5 left-1.5"
-          onChange={setSelectedRepo}
-          value={selectedRepo}
-        />
+        <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5">
+          <RepoPicker onChange={handleSelectRepo} value={selectedRepo} />
+          <BranchPicker
+            defaultBranch={selectedRepo?.defaultBranch ?? null}
+            onChange={setSelectedBranch}
+            repoFullName={selectedRepo?.fullName ?? null}
+            value={selectedBranch}
+          />
+        </div>
         <Button
           className="absolute right-1.5 bottom-1.5"
           disabled={isSubmitDisabled}

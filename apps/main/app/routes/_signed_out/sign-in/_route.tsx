@@ -10,7 +10,7 @@ export default function Route() {
         <h1 className="text-center text-2xl font-bold tracking-tight">
           Sign in to Kill The Backlog
         </h1>
-        <Button asChild size="lg">
+        <Button asChild size="lg" variant="outline">
           <Link to="/auth/github">
             <GitHubIcon />
             Continue with GitHub

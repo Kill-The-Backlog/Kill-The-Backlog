@@ -1,11 +1,15 @@
-import { CaretUpDownIcon, GithubLogoIcon } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
+import {
+  CaretUpDownIcon,
+  CheckIcon,
+  GithubLogoIcon,
+} from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 
 import type {
   GitHubRepoItem,
   loader as reposLoader,
-} from "#routes/_signed_in/api/repos/_route.js";
+} from "#routes/_signed_in/api/repos/_index/_route.js";
 
 import { PrivateBadge } from "#components/private-badge.js";
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
@@ -26,6 +30,7 @@ import {
   EmptyTitle,
 } from "#components/ui/empty.js";
 import { Skeleton } from "#components/ui/skeleton.js";
+import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 
 export type { GitHubRepoItem };
@@ -41,18 +46,14 @@ export function RepoPicker({
 }) {
   const [open, setOpen] = useState(false);
   const fetcher = useFetcher<typeof reposLoader>();
-  const hasFetched = useRef(false);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open && !hasFetched.current && fetcher.state === "idle") {
-      hasFetched.current = true;
-      void fetcher.load("/api/repos");
-    }
+    if (!open || fetcher.data || fetcher.state !== "idle") return;
+    void fetcher.load("/api/repos");
   }, [open, fetcher]);
 
   const repos = fetcher.data?.repos;
-  const isLoading = fetcher.state === "loading" || (open && !repos);
+  const isLoading = open && !repos;
 
   return (
     <>
@@ -77,46 +78,53 @@ export function RepoPicker({
       >
         <Command value={value?.fullName}>
           <CommandInput placeholder="Search repositories..." />
-          <CommandList ref={listRef}>
+          <CommandList>
             {isLoading ? (
               <RepoListSkeleton />
             ) : repos && repos.length > 0 ? (
               <>
                 <CommandEmpty>No repositories match your search.</CommandEmpty>
-                {repos.map((repo) => (
-                  <CommandItem
-                    key={repo.githubRepoId}
-                    keywords={repo.description ? [repo.description] : []}
-                    onSelect={() => {
-                      onChange(repo);
-                      setOpen(false);
-                    }}
-                    value={repo.fullName}
-                  >
-                    <Avatar size="sm">
-                      <AvatarImage
-                        alt={repo.ownerLogin}
-                        src={repo.ownerAvatarUrl}
-                      />
-                      <AvatarFallback>
-                        {getInitials(repo.ownerLogin)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-xs font-medium">
-                          {repo.fullName}
-                        </span>
-                        {repo.isPrivate && <PrivateBadge />}
+                {repos.map((repo) => {
+                  const isSelected = repo.fullName === value?.fullName;
+                  return (
+                    <CommandItem
+                      key={repo.githubRepoId}
+                      keywords={repo.description ? [repo.description] : []}
+                      onSelect={() => {
+                        onChange(repo);
+                        setOpen(false);
+                      }}
+                      value={repo.fullName}
+                    >
+                      <Avatar size="sm">
+                        <AvatarImage
+                          alt={repo.ownerLogin}
+                          src={repo.ownerAvatarUrl}
+                        />
+                        <AvatarFallback>
+                          {getInitials(repo.ownerLogin)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-xs font-medium">
+                            {repo.fullName}
+                          </span>
+                          {repo.isPrivate && <PrivateBadge />}
+                          <CheckIcon
+                            className={cn("ml-auto", !isSelected && "opacity-0")}
+                            data-slot="command-item-check"
+                          />
+                        </div>
+                        {repo.description && (
+                          <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                            {repo.description}
+                          </p>
+                        )}
                       </div>
-                      {repo.description && (
-                        <p className="text-muted-foreground mt-0.5 truncate text-xs">
-                          {repo.description}
-                        </p>
-                      )}
-                    </div>
-                  </CommandItem>
-                ))}
+                    </CommandItem>
+                  );
+                })}
               </>
             ) : (
               <EmptyRepos />

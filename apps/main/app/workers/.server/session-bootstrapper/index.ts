@@ -14,6 +14,7 @@ import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 import { defineWorker } from "#lib/.server/workers/define-worker.js";
 
 type JobData = {
+  baseBranch: string;
   initialPrompt: string;
   repoFullName: string;
   sessionId: string;
@@ -33,7 +34,8 @@ type JobData = {
 export const sessionBootstrapperWorker = defineWorker<JobData>(
   "session-bootstrapper",
   async (job) => {
-    const { initialPrompt, repoFullName, sessionId, userId } = job.data;
+    const { baseBranch, initialPrompt, repoFullName, sessionId, userId } =
+      job.data;
 
     // Clear any prior errorMessage so a retry starts from a clean slate and
     // the UI's error alert reflects only this attempt. If bootstrapping fails
@@ -66,8 +68,12 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
       // working tree. Using the typed git helper (over a raw shell command)
       // keeps auth out of the command line — the OAuth token is transmitted
       // via the E2B control channel — and `x-access-token` is GitHub's
-      // recommended basic-auth username for OAuth user tokens.
+      // recommended basic-auth username for OAuth user tokens. Cloning with
+      // `branch: baseBranch` means HEAD is already on the user's chosen
+      // branch when `createSessionBranch` runs, so the session branch
+      // forks from there rather than the repo's default branch.
       await sandbox.git.clone(`https://github.com/${repoFullName}.git`, {
+        branch: baseBranch,
         password: githubAccount.oauthAccessToken,
         path: clonePath,
         username: "x-access-token",
