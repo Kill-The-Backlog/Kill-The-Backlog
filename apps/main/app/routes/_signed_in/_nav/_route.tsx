@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
+import { RelativeTime } from "#components/relative-time.js";
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
 import {
   DropdownMenu,
@@ -39,7 +40,9 @@ export default function Route() {
   const [headerEl, setHeaderEl] = useState<HTMLElement | null>(null);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
+    >
       <AppSidebar />
       <SidebarInset className="h-svh">
         <header className="border-border flex h-12 shrink-0 items-center gap-2 border-b px-3">
@@ -97,19 +100,38 @@ function SessionList() {
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
-          {sessions.map((session) => (
-            <SidebarMenuItem key={session.id}>
-              <NavLink draggable={false} to={`/sessions/${session.id}`}>
-                {({ isActive }) => (
-                  <SidebarMenuButton isActive={isActive}>
-                    <span className="truncate">
-                      {session.title ?? session.initialPrompt}
-                    </span>
-                  </SidebarMenuButton>
-                )}
-              </NavLink>
-            </SidebarMenuItem>
-          ))}
+          {sessions.map((session) => {
+            const repoName =
+              session.repoFullName.split("/")[1] ?? session.repoFullName;
+            const prNumber =
+              session.prNumber !== null ? ` #${session.prNumber}` : "";
+            return (
+              <SidebarMenuItem key={session.id}>
+                <NavLink draggable={false} to={`/sessions/${session.id}`}>
+                  {({ isActive }) => (
+                    <SidebarMenuButton
+                      className="h-11 data-[active=true]:font-normal"
+                      isActive={isActive}
+                    >
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="truncate">
+                          {session.title ?? session.initialPrompt}
+                        </span>
+                        <span className="text-muted-foreground truncate">
+                          <RelativeTime
+                            timestampMs={session.lastUserMessageAt}
+                          />
+                          {" · "}
+                          {repoName}
+                          {prNumber}
+                        </span>
+                      </div>
+                    </SidebarMenuButton>
+                  )}
+                </NavLink>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

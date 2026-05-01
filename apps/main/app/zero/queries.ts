@@ -7,7 +7,10 @@ import type {} from "./context.js";
 export const queries = defineQueries({
   sessions: {
     mine: defineQuery(({ ctx }) =>
-      zql.Session.where("userId", ctx.userId).orderBy("createdAt", "desc"),
+      zql.Session.where("userId", ctx.userId).orderBy(
+        "lastUserMessageAt",
+        "desc",
+      ),
     ),
     one: defineQuery(z.object({ id: z.string() }), ({ args: { id }, ctx }) =>
       zql.Session.where("id", id)
