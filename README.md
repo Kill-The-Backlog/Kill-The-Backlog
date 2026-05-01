@@ -118,3 +118,9 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 ## License
 
 [AGPL-3.0-or-later](LICENSE)
+
+---
+
+## A Joke
+
+Why did the GitHub PR go to therapy? Because it had too many merge conflicts! 🎭
