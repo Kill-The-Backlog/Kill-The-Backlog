@@ -28,6 +28,7 @@ export type Session = {
   todos: unknown | null;
   summary: unknown | null;
   errorMessage: string | null;
+  lastUserMessageAt: Generated<Timestamp>;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };

@@ -62,6 +62,7 @@ export const sessionTable = table("Session")
     todos: json().optional(),
     summary: json().optional(),
     errorMessage: string().optional(),
+    lastUserMessageAt: number(),
     createdAt: number(),
     updatedAt: number(),
   })

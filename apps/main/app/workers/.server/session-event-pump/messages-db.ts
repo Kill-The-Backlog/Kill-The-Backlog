@@ -42,6 +42,16 @@ export async function upsertMessage(
         .doUpdateSet({ role: message.role, updatedAt: new Date() }),
     )
     .execute();
+
+  // The detail UI shows "last user prompt" from this column, so only user
+  // messages count — assistant messages and tool/reasoning parts don't bump.
+  if (message.role === "user") {
+    await exec
+      .updateTable("Session")
+      .set({ lastUserMessageAt: new Date() })
+      .where("id", "=", sessionId)
+      .execute();
+  }
 }
 
 export async function upsertPart(exec: Exec, part: Part): Promise<void> {
