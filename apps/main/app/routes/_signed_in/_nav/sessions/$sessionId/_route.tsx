@@ -1,4 +1,6 @@
-import { ArrowUpIcon } from "@phosphor-icons/react";
+import type { QueryRowType } from "@rocicorp/zero";
+
+import { ArrowUpIcon, GitPullRequestIcon } from "@phosphor-icons/react";
 import { useQuery } from "@rocicorp/zero/react";
 import { useEffect, useRef, useState } from "react";
 import { data, Navigate, useFetcher } from "react-router";
@@ -22,6 +24,8 @@ import type { Route } from "./+types/_route";
 import { HeaderSlot } from "../../header-slot.js";
 import { Details } from "./details.js";
 import { Messages } from "./messages.js";
+
+type SessionRow = NonNullable<QueryRowType<typeof queries.sessions.one>>;
 
 const requestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
@@ -116,7 +120,10 @@ export default function Route({ params }: Route.ComponentProps) {
           {/* Messages */}
           <div className="flex min-w-0 flex-1 flex-col">
             <Messages className="flex-1 pb-32" session={session} />
-            <Composer className="sticky bottom-0 -mb-8 shrink-0 pb-4" />
+            <Composer
+              className="sticky bottom-0 -mb-8 shrink-0 pb-4"
+              session={session}
+            />
           </div>
           {/* Details */}
           <Details
@@ -129,7 +136,13 @@ export default function Route({ params }: Route.ComponentProps) {
   );
 }
 
-function Composer({ className }: { className?: string }) {
+function Composer({
+  className,
+  session,
+}: {
+  className?: string;
+  session: SessionRow;
+}) {
   const fetcher = useFetcher<Route.ComponentProps["actionData"]>();
   // Only reflect the active server round-trip — not the post-action
   // revalidation ("loading"). Keeping the textarea enabled during
@@ -140,6 +153,11 @@ function Composer({ className }: { className?: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [prompt, setPrompt] = useState("");
   const isSubmitDisabled = isSubmitting || !prompt.trim();
+
+  // The parent route remounts `Composer` on session change via `key`, so this
+  // captures whether the PR was already present when the user landed on this
+  // session — allowing us to animate only when one *appears* mid-session.
+  const hadPrOnMountRef = useRef(session.prNumber !== null);
 
   const actionData = fetcher.data;
   useEffect(() => {
@@ -164,6 +182,45 @@ function Composer({ className }: { className?: string }) {
       the form itself would shift the button outward by any padding the
       form receives from its parent (e.g. pb-4). */}
       <div className="relative">
+        {session.prNumber !== null && (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-full flex pb-2",
+              !hadPrOnMountRef.current && "animate-in fade-in-0 duration-500",
+            )}
+          >
+            {/* The row floats above the textarea so messages can slide
+            behind it. The backdrop fades from transparent at the top of
+            the row to the page background by the middle of the button,
+            then stays solid through the `pb-2` gap so the strip between
+            the button and the textarea reads as part of the same opaque
+            surface (and seamlessly meets the form's bg below). */}
+            <div
+              aria-hidden
+              className="to-background absolute inset-0 -z-10 bg-linear-to-b/srgb to-50%"
+            />
+            <div
+              // The button's hover styles aren't opaque.
+              className="bg-background rounded-full"
+            >
+              <Button
+                asChild
+                className="bg-background pointer-events-auto rounded-full shadow-sm"
+                size="lg"
+                variant="outline"
+              >
+                <a
+                  href={`https://github.com/${session.repoFullName}/pull/${session.prNumber}`}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <GitPullRequestIcon data-icon="inline-start" />
+                  View PR
+                </a>
+              </Button>
+            </div>
+          </div>
+        )}
         <Textarea
           autoFocus
           className="min-h-24 resize-none pb-10"
