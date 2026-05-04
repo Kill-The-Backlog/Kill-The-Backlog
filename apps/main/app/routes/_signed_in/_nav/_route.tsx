@@ -3,7 +3,7 @@ import type { User } from "@ktb/db/types";
 
 import { CaretUpDownIcon, SignOutIcon, SwordIcon } from "@phosphor-icons/react";
 import { useQuery, useZero } from "@rocicorp/zero/react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import invariant from "tiny-invariant";
 
@@ -30,6 +30,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "#components/ui/sidebar.js";
+import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
 import { queries } from "#zero/queries.js";
@@ -63,6 +64,39 @@ export default function Route() {
 }
 
 function AppSidebar() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    invariant(el, "Scroll container is required");
+
+    const update = () => {
+      setCanScrollUp(el.scrollTop > 0);
+      setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+    };
+
+    // Container size changes (e.g. window resize). ResizeObserver does
+    // not fire on scrollHeight changes, only on the element's own box.
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(el);
+
+    // Catch DOM additions/removals inside the scroll container, e.g. the
+    // session list mounting after data loads or sessions being added.
+    const mutationObserver = new MutationObserver(update);
+    mutationObserver.observe(el, { childList: true, subtree: true });
+
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+
+    return () => {
+      el.removeEventListener("scroll", update);
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, []);
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -79,9 +113,23 @@ function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <SessionList />
-      </SidebarContent>
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <SidebarContent ref={scrollRef}>
+          <SessionList />
+        </SidebarContent>
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 h-4 bg-linear-to-b from-black/10 to-transparent transition-opacity",
+            canScrollUp ? "opacity-100" : "opacity-0",
+          )}
+        />
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-linear-to-t from-black/10 to-transparent transition-opacity",
+            canScrollDown ? "opacity-100" : "opacity-0",
+          )}
+        />
+      </div>
       <SidebarFooter>
         <UserMenu />
       </SidebarFooter>
