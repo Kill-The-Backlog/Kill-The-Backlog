@@ -12,7 +12,7 @@ export function TextPart({ part }: { part: Extract<Part, { type: "text" }> }) {
     // `relative` establishes a containing block for the `position: absolute`
     // `sr-only` footnote label that remark-gfm emits, so it can't escape the
     // scroll container and extend document height.
-    <div className="border-border relative flex flex-col gap-3 rounded border p-4">
+    <div className="border-border relative flex flex-col gap-3 rounded-md border p-4">
       <Markdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
         {/* `part.text` has leading whitespaces for some reason. */}
         {part.text.trim()}
@@ -50,7 +50,7 @@ const markdownComponents: Components = {
   code: ({ className, node, ...props }) => (
     <code
       className={cn(
-        "bg-muted font-heading rounded px-1 py-0.5 text-[0.85em]",
+        "bg-muted rounded px-1 py-0.5 font-mono text-[0.85em]",
         className,
       )}
       {...props}
@@ -119,7 +119,7 @@ const markdownComponents: Components = {
   pre: ({ className, node, ...props }) => (
     <pre
       className={cn(
-        "bg-muted font-heading overflow-x-auto rounded-md p-3 text-xs leading-relaxed [&>code]:bg-transparent [&>code]:p-0 [&>code]:text-xs",
+        "bg-muted overflow-x-auto rounded-md p-3 font-mono text-xs leading-relaxed [&>code]:bg-transparent [&>code]:p-0 [&>code]:text-xs",
         className,
       )}
       {...props}

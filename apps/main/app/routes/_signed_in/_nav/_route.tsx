@@ -110,14 +110,14 @@ function SessionList() {
                 <NavLink draggable={false} to={`/sessions/${session.id}`}>
                   {({ isActive }) => (
                     <SidebarMenuButton
-                      className="h-11 data-[active=true]:font-normal"
+                      className="h-auto data-[active=true]:font-normal"
                       isActive={isActive}
                     >
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className="truncate">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-xs">
                           {session.title ?? session.initialPrompt}
                         </span>
-                        <span className="text-muted-foreground truncate">
+                        <span className="text-muted-foreground text-2xs truncate">
                           <RelativeTime
                             timestampMs={session.lastUserMessageAt}
                           />
