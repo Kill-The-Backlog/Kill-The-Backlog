@@ -460,7 +460,7 @@ function SidebarTrigger({
         onClick?.(event);
         toggleSidebar();
       }}
-      size="icon-sm"
+      size="icon"
       variant="ghost"
       {...props}
     >

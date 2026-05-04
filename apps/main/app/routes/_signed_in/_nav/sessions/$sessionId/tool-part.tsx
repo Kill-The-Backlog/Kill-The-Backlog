@@ -10,6 +10,7 @@ import { EditToolPart } from "./tool-part/edit.js";
 import { GlobToolPart } from "./tool-part/glob.js";
 import { GrepToolPart } from "./tool-part/grep.js";
 import { ReadToolPart } from "./tool-part/read.js";
+import { TaskToolPart } from "./tool-part/task.js";
 import { WriteToolPart } from "./tool-part/write.js";
 
 export function ToolPart({ part }: { part: Extract<Part, { type: "tool" }> }) {
@@ -26,6 +27,8 @@ export function ToolPart({ part }: { part: Extract<Part, { type: "tool" }> }) {
       return <GrepToolPart part={part} />;
     case "read":
       return <ReadToolPart part={part} />;
+    case "task":
+      return <TaskToolPart part={part} />;
     case "write":
       return <WriteToolPart part={part} />;
   }
