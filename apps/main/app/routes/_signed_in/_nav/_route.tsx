@@ -45,7 +45,7 @@ export default function Route() {
       style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
     >
       <AppSidebar />
-      <SidebarInset className="h-svh">
+      <SidebarInset className="h-svh min-w-0">
         <header className="border-border flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <SidebarTrigger />
           {/* Portal target for child routes' `HeaderSlot` items. `display:
