@@ -50,7 +50,7 @@ const markdownComponents: Components = {
   code: ({ className, node, ...props }) => (
     <code
       className={cn(
-        "bg-muted rounded px-1 py-0.5 font-mono text-[0.85em]",
+        "bg-muted rounded px-1 py-0.5 font-mono text-[0.85em] wrap-break-word",
         className,
       )}
       {...props}
