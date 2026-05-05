@@ -7,6 +7,7 @@ const MODEL = "claude-haiku-4-5-20251001";
 
 const SYSTEM_PROMPT = [
   "You write one-line git commit subjects for automated sessions.",
+  "The user message contains the prompt for this turn inside <prompt>…</prompt> tags, followed by the list of changed files.",
   "Rules:",
   "- 50 to 72 characters.",
   "- Imperative mood (Add, Fix, Refactor, Remove).",
@@ -39,7 +40,10 @@ export async function generateCommitMessage({
 
   const userContent = [
     "User prompt for this turn:",
+    "",
+    "<prompt>",
     userPrompt,
+    "</prompt>",
     "",
     "Files changed:",
     fileList,

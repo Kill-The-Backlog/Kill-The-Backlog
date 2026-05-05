@@ -6,6 +6,7 @@ const MODEL = "claude-haiku-4-5-20251001";
 
 const SYSTEM_PROMPT = [
   "You write short titles for coding session prompts that show up in a sidebar.",
+  "The user message contains the prompt to title inside <prompt>…</prompt> tags.",
   "Rules:",
   "- 3 to 6 words.",
   "- Title Case.",
@@ -15,9 +16,17 @@ const SYSTEM_PROMPT = [
 ].join("\n");
 
 export async function generateSessionTitle(prompt: string): Promise<string> {
+  const userContent = [
+    "Prompt to title:",
+    "",
+    "<prompt>",
+    prompt,
+    "</prompt>",
+  ].join("\n");
+
   const message = await anthropic.messages.create({
     max_tokens: 32,
-    messages: [{ content: prompt, role: "user" }],
+    messages: [{ content: userContent, role: "user" }],
     model: MODEL,
     system: SYSTEM_PROMPT,
   });
