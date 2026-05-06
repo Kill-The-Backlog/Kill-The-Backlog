@@ -59,6 +59,7 @@ model Session {
   model             String
   e2bSandboxId      String?
   opencodeSessionId String?
+  opencodeStatus    String?
   prNumber          Int?
   todos             Json?
   summary           Json?

@@ -44,6 +44,7 @@ export async function handleEvent(
     }
 
     case "session.error": {
+      if (isAbortError(event)) return;
       await queryPatchSession(sessionId, {
         errorMessage: extractErrorMessage(event),
       });
@@ -51,12 +52,15 @@ export async function handleEvent(
     }
 
     case "session.idle":
-    case "session.status":
-      // `session.status` drives the pump's idle timer (see event-pump.ts);
-      // `session.idle` duplicates the `status.type === "idle"` signal and
-      // doesn't need separate handling. Swallow both here so they don't
-      // fall through to the `Unhandled event` default log.
+      // `session.status` is the authoritative persisted status signal.
       return;
+
+    case "session.status": {
+      await queryPatchSession(sessionId, {
+        opencodeStatus: event.properties.status.type,
+      });
+      return;
+    }
 
     case "session.updated": {
       const { summary } = event.properties.info;
@@ -81,4 +85,8 @@ function extractErrorMessage(event: EventSessionError): string {
   if (!error) return "Unknown error";
   const { message } = error.data;
   return typeof message === "string" ? `${error.name}: ${message}` : error.name;
+}
+
+function isAbortError(event: EventSessionError): boolean {
+  return event.properties.error?.name === "MessageAbortedError";
 }

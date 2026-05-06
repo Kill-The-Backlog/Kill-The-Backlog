@@ -58,6 +58,7 @@ export const sessionTable = table("Session")
     model: string(),
     e2bSandboxId: string().optional(),
     opencodeSessionId: string().optional(),
+    opencodeStatus: string().optional(),
     prNumber: number().optional(),
     todos: json().optional(),
     summary: json().optional(),
