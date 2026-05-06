@@ -118,3 +118,12 @@ See [docs/deploying.md](docs/deploying.md) for deploying to GKE Autopilot with w
 ## License
 
 [AGPL-3.0-or-later](LICENSE)
+
+---
+
+## One for the road
+
+Why did the developer go broke?
+
+Because he used up all his cache.
+
