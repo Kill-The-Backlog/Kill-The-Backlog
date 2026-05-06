@@ -10,13 +10,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "e2b": "^2.19.0"
+    "e2b": "^2.19.5"
   },
   "devDependencies": {
     "@ktb/eslint-configs": "workspace:*",
     "@ktb/ts-configs": "workspace:*",
     "@types/node": "^25.6.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.3.0",
     "typescript": "^6.0.3"
   }
 }

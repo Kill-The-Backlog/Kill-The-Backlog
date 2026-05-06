@@ -43,19 +43,19 @@
   },
   "dependencies": {
     "@ktb/shared": "workspace:*",
-    "@rocicorp/zero": "^1.3.0",
-    "kysely": "^0.28.16",
+    "@rocicorp/zero": "^1.4.0",
+    "kysely": "^0.28.17",
     "pg": "^8.20.0",
     "prisma": "^7.8.0",
     "prisma-cli": "^1.0.9",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@ktb/eslint-configs": "workspace:*",
     "@ktb/ts-configs": "workspace:*",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.3.0",
     "prisma-kysely": "^3.1.0",
     "prisma-zero": "^0.1.3",
     "typescript": "^6.0.3"
