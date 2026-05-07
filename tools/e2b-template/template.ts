@@ -4,15 +4,7 @@ const OPENCODE_PORT = 4096;
 const OPENCODE_VERSION = "1.4.11";
 
 export const template = Template()
-  .fromImage("e2bdev/base")
-  .runCmd(
-    [
-      "apt-get update",
-      "apt-get install -y --no-install-recommends curl ca-certificates",
-      "rm -rf /var/lib/apt/lists/*",
-    ],
-    { user: "root" },
-  )
+  .fromNodeImage("24")
   .runCmd(
     [
       // The opencode installer hardcodes $HOME/.opencode/bin and ignores any
