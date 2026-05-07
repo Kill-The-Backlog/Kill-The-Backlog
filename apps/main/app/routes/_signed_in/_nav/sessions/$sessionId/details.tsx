@@ -14,6 +14,8 @@ import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
 
+import { PreviewDetails } from "./preview-details.js";
+
 type SessionRow = NonNullable<QueryRowType<typeof queries.sessions.one>>;
 
 export function Details({
@@ -79,6 +81,8 @@ export function Details({
           </span>
         </a>
       )}
+
+      <PreviewDetails session={session} />
     </aside>
   );
 }

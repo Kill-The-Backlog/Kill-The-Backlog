@@ -14,6 +14,7 @@ import { createSessionBranch } from "#lib/.server/sandbox-git/create-branch.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 import { defineWorker } from "#lib/.server/workers/define-worker.js";
+import { sessionPreviewStarterWorker } from "#workers/.server/session-preview-starter/index.js";
 
 type JobData = {
   baseBranch: string;
@@ -136,6 +137,11 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
         e2bSandboxId: sandbox.sandboxId,
         opencodeSessionId: opencodeSession.data.id,
       });
+
+      await sessionPreviewStarterWorker.enqueue(
+        { sessionId },
+        { jobId: sessionId, replaceFinished: true },
+      );
 
       await dispatchPrompt({
         e2bSandboxId: sandbox.sandboxId,

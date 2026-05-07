@@ -26,6 +26,10 @@ export type Session = {
   opencodeSessionId: string | null;
   opencodeStatus: string | null;
   prNumber: number | null;
+  previewStatus: string | null;
+  previewErrorMessage: string | null;
+  previewProcessId: number | null;
+  previewLogs: unknown | null;
   todos: unknown | null;
   summary: unknown | null;
   errorMessage: string | null;

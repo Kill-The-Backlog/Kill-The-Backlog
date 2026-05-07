@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 
 import {
   ArrowUpIcon,
+  BrowserIcon,
   GitPullRequestIcon,
   StopIcon,
 } from "@phosphor-icons/react";
@@ -20,6 +21,7 @@ import type {
 import { Button } from "#components/ui/button.js";
 import { Spinner } from "#components/ui/spinner.js";
 import { Textarea } from "#components/ui/textarea.js";
+import { PREVIEW_STATUS, previewBaseUrl } from "#lib/session-preview.js";
 import { cn } from "#lib/utils/cn.js";
 import { queries } from "#zero/queries.js";
 
@@ -174,8 +176,13 @@ function ComposerPRBanner({ session }: { session: SessionRow }) {
   // captures whether the PR was already present when the user landed on this
   // session — allowing us to animate only when one *appears* mid-session.
   const hadPrOnMountRef = useRef(session.prNumber !== null);
+  const previewUrl =
+    session.previewStatus === PREVIEW_STATUS.running &&
+    session.e2bSandboxId !== null
+      ? previewBaseUrl(session.e2bSandboxId)
+      : null;
 
-  if (session.prNumber === null) return null;
+  if (session.prNumber === null && previewUrl === null) return null;
 
   return (
     <div
@@ -196,23 +203,38 @@ function ComposerPRBanner({ session }: { session: SessionRow }) {
       />
       <div
         // The button's hover styles aren't opaque.
-        className="bg-background rounded-full"
+        className="flex gap-2"
       >
-        <Button
-          asChild
-          className="bg-background pointer-events-auto rounded-full shadow-sm"
-          size="lg"
-          variant="outline"
-        >
-          <a
-            href={`https://github.com/${session.repoFullName}/pull/${session.prNumber}`}
-            rel="noopener noreferrer"
-            target="_blank"
+        {session.prNumber !== null && (
+          <Button
+            asChild
+            className="bg-background pointer-events-auto rounded-full shadow-sm"
+            size="lg"
+            variant="outline"
           >
-            <GitPullRequestIcon data-icon="inline-start" />
-            View PR
-          </a>
-        </Button>
+            <a
+              href={`https://github.com/${session.repoFullName}/pull/${session.prNumber}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <GitPullRequestIcon data-icon="inline-start" />
+              View PR
+            </a>
+          </Button>
+        )}
+        {previewUrl !== null && (
+          <Button
+            asChild
+            className="bg-background pointer-events-auto rounded-full shadow-sm"
+            size="lg"
+            variant="outline"
+          >
+            <a href={previewUrl} rel="noopener noreferrer" target="_blank">
+              <BrowserIcon data-icon="inline-start" />
+              Open preview
+            </a>
+          </Button>
+        )}
       </div>
     </div>
   );

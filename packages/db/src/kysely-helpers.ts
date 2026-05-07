@@ -5,6 +5,35 @@ import { sql } from "kysely";
 export { sql } from "kysely";
 
 /**
+ * Atomically append `value` to a jsonb array column, keeping only the newest
+ * `maxItems` entries.
+ *
+ * Kysely has no DSL for PostgreSQL's jsonb array helpers, so keep the raw SQL
+ * isolated here instead of spreading jsonb expressions across call sites.
+ */
+export function appendToJSONBArray<T>(
+  column: Expression<T>,
+  value: unknown,
+  maxItems: number,
+): RawBuilder<T> {
+  if (maxItems < 1) {
+    throw new Error("maxItems must be greater than 0");
+  }
+
+  return sql<T>`(
+    select jsonb_agg(entry order by position)
+    from (
+      select entry, position
+      from jsonb_array_elements(
+        coalesce(${column}, '[]'::jsonb) || jsonb_build_array(${JSON.stringify(value)}::jsonb)
+      ) with ordinality as entries(entry, position)
+      order by position desc
+      limit ${maxItems}
+    ) kept
+  )`;
+}
+
+/**
  * Atomically append `value` to a top-level text field of a jsonb column.
  *
  * Equivalent to: `data = data || { [field]: (data ->> field ?? '') + value }`.

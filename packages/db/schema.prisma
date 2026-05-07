@@ -49,25 +49,29 @@ model GitHubAccount {
 }
 
 model Session {
-  id                String           @id @default(uuid())
-  userId            Int
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  initialPrompt     String
-  title             String?
-  repoFullName      String
-  baseBranch        String
-  model             String
-  e2bSandboxId      String?
-  opencodeSessionId String?
-  opencodeStatus    String?
-  prNumber          Int?
-  todos             Json?
-  summary           Json?
-  errorMessage      String?
-  messages          SessionMessage[]
-  lastUserMessageAt DateTime         @default(now()) @db.Timestamptz(3)
-  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
+  id                  String           @id @default(uuid())
+  userId              Int
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  initialPrompt       String
+  title               String?
+  repoFullName        String
+  baseBranch          String
+  model               String
+  e2bSandboxId        String?
+  opencodeSessionId   String?
+  opencodeStatus      String?
+  prNumber            Int?
+  previewStatus       String?
+  previewErrorMessage String?
+  previewProcessId    Int?
+  previewLogs         Json?
+  todos               Json?
+  summary             Json?
+  errorMessage        String?
+  messages            SessionMessage[]
+  lastUserMessageAt   DateTime         @default(now()) @db.Timestamptz(3)
+  createdAt           DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime         @updatedAt @db.Timestamptz(3)
 }
 
 model SessionMessage {
