@@ -1,10 +1,12 @@
 import type { Event } from "@opencode-ai/sdk/v2";
 import type { Job } from "bullmq";
 
+import { jsonb } from "@ktb/db/kysely-helpers";
 import { ReadableStream } from "node:stream/web";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { formatError } from "#lib/.server/format-error.js";
+import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 
 import type { IdleTimer } from "./idle-timer.js";
 
@@ -12,7 +14,10 @@ import { applySnapshot } from "./apply-snapshot.js";
 import { handleEvent } from "./handle-event.js";
 import { createIdleTimer } from "./idle-timer.js";
 import { openOpencodeEventStream } from "./opencode-events.js";
-import { fetchSessionSnapshot } from "./opencode-snapshot.js";
+import {
+  fetchSessionSnapshot,
+  fetchTodoSnapshot,
+} from "./opencode-snapshot.js";
 
 // Fixed pause between reconnect attempts. Short enough to recover quickly
 // from transient blips, long enough not to hammer opencode while it's down.
@@ -25,8 +30,8 @@ const RECONNECT_DELAY_MS = 1_000;
 // subscribe-then-snapshot flow:
 //
 //  1. Open the SSE stream and start buffering every event that arrives.
-//  2. Fetch the authoritative `GET /session/:id/message` snapshot and apply
-//     it to our DB (idempotent upserts + reconcile of stale rows).
+//  2. Fetch authoritative message and todo snapshots and apply them to our DB
+//     (idempotent upserts + reconcile of stale rows).
 //  3. Drain the buffer and then continue tailing live events in-place.
 //
 // All of opencode's persisted events are full snapshots of their aggregate,
@@ -160,10 +165,10 @@ async function runSingleConnection({
   });
 
   // Wrap the generator in a ReadableStream so the SSE socket keeps
-  // draining into an in-memory queue while we fetch + apply the snapshot.
+  // draining into an in-memory queue while we fetch + apply snapshots.
   // Events dispatched from this buffer preserve arrival order, and the
-  // consumer below only starts pulling after the snapshot has landed so
-  // the snapshot never overwrites a newer live event.
+  // consumer below only starts pulling after snapshots have landed so
+  // snapshots never overwrite newer live events.
   const events = new ReadableStream<Event>({
     cancel(reason) {
       connection.abort(reason);
@@ -181,14 +186,24 @@ async function runSingleConnection({
   });
 
   try {
-    const messages = await fetchSessionSnapshot({
-      opencodeBaseUrl,
-      opencodeSessionId,
-      signal,
-    });
-    await applySnapshot({ messages, sessionId });
+    const [messages, todos] = await Promise.all([
+      fetchSessionSnapshot({
+        opencodeBaseUrl,
+        opencodeSessionId,
+        signal,
+      }),
+      fetchTodoSnapshot({
+        opencodeBaseUrl,
+        opencodeSessionId,
+        signal,
+      }),
+    ]);
+    await Promise.all([
+      applySnapshot({ messages, sessionId }),
+      queryPatchSession(sessionId, { todos: jsonb(todos) }),
+    ]);
     await job.log(
-      `[pump] snapshot applied sessionId=${sessionId} messages=${messages.length}`,
+      `[pump] snapshot applied sessionId=${sessionId} messages=${messages.length} todos=${todos.length}`,
     );
   } catch (error) {
     await events.cancel().catch(() => undefined);

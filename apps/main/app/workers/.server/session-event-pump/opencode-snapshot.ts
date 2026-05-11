@@ -1,15 +1,6 @@
-import type { Message, Part } from "@opencode-ai/sdk/v2";
+import type { SessionMessagesResponse, Todo } from "@opencode-ai/sdk/v2";
 
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
-
-// A session snapshot as returned by opencode's `GET /session/:id/message`.
-// `info` is the message (user or assistant); `parts` is every part that
-// currently belongs to it. Treat this as the authoritative state of the
-// session at the moment the fetch resolves.
-export type SessionSnapshotMessage = {
-  info: Message;
-  parts: Part[];
-};
 
 // Fetches the full message + part snapshot for an opencode session. This is
 // how the pump recovers any events that happened while it was disconnected:
@@ -26,7 +17,7 @@ export async function fetchSessionSnapshot({
   opencodeBaseUrl: string;
   opencodeSessionId: string;
   signal: AbortSignal;
-}): Promise<SessionSnapshotMessage[]> {
+}): Promise<SessionMessagesResponse> {
   const client = createOpencodeClient({ baseUrl: opencodeBaseUrl });
   const result = await client.session.messages(
     { sessionID: opencodeSessionId },
@@ -34,6 +25,31 @@ export async function fetchSessionSnapshot({
   );
   if (result.error) {
     throw new Error("Failed to fetch opencode session snapshot", {
+      cause: result.error,
+    });
+  }
+  return result.data;
+}
+
+// Fetches the current todo list for an opencode session. Todos are a persisted
+// session aggregate too, so the pump snapshots them on every reconnect before
+// replaying buffered live `todo.updated` events.
+export async function fetchTodoSnapshot({
+  opencodeBaseUrl,
+  opencodeSessionId,
+  signal,
+}: {
+  opencodeBaseUrl: string;
+  opencodeSessionId: string;
+  signal: AbortSignal;
+}): Promise<Todo[]> {
+  const client = createOpencodeClient({ baseUrl: opencodeBaseUrl });
+  const result = await client.session.todo(
+    { sessionID: opencodeSessionId },
+    { signal },
+  );
+  if (result.error) {
+    throw new Error("Failed to fetch opencode todo snapshot", {
       cause: result.error,
     });
   }

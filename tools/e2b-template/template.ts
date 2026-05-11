@@ -1,6 +1,8 @@
 import { Template, waitForURL } from "e2b";
 
 const OPENCODE_PORT = 4096;
+// Version 1.14.42 has a known issue (see: https://github.com/anomalyco/opencode/issues/26697);
+// pinning to the previous stable version.
 const OPENCODE_VERSION = "1.14.41";
 
 export const template = Template()

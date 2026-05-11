@@ -1,6 +1,6 @@
-import { db } from "#lib/.server/clients/db.js";
+import type { SessionMessagesResponse } from "@opencode-ai/sdk/v2";
 
-import type { SessionSnapshotMessage } from "./opencode-snapshot.js";
+import { db } from "#lib/.server/clients/db.js";
 
 import { upsertMessage, upsertPart } from "./messages-db.js";
 
@@ -14,7 +14,7 @@ export async function applySnapshot({
   messages,
   sessionId,
 }: {
-  messages: SessionSnapshotMessage[];
+  messages: SessionMessagesResponse;
   sessionId: string;
 }): Promise<void> {
   const messageOpencodeIds = messages.map((m) => m.info.id);

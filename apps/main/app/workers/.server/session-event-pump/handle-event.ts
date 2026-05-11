@@ -1,6 +1,8 @@
 import type { Event, EventSessionError } from "@opencode-ai/sdk/v2";
 import type { Job } from "bullmq";
 
+import { jsonb } from "@ktb/db/kysely-helpers";
+
 import { db } from "#lib/.server/clients/db.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 
@@ -56,6 +58,7 @@ export async function handleEvent(
       return;
 
     case "session.status": {
+      console.log("session.status", event.properties.status.type);
       await queryPatchSession(sessionId, {
         opencodeStatus: event.properties.status.type,
       });
@@ -70,7 +73,9 @@ export async function handleEvent(
     }
 
     case "todo.updated": {
-      await queryPatchSession(sessionId, { todos: event.properties.todos });
+      await queryPatchSession(sessionId, {
+        todos: jsonb(event.properties.todos),
+      });
       return;
     }
 

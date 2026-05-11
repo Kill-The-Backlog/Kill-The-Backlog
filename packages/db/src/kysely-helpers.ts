@@ -48,3 +48,11 @@ export function appendToJSONBField<T>(
 ): RawBuilder<T> {
   return sql<T>`jsonb_set(${column}, array[${field}], to_jsonb(coalesce(${column} ->> ${field}, '') || ${value}))`;
 }
+
+/**
+ * Wraps JSON values in an explicit JSONB cast so top-level arrays don't get
+ * serialized by pg as Postgres arrays.
+ */
+export function jsonb<T>(value: T): RawBuilder<T> {
+  return sql<T>`CAST(${JSON.stringify(value)} AS JSONB)`;
+}
