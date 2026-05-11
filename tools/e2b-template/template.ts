@@ -1,7 +1,7 @@
 import { Template, waitForURL } from "e2b";
 
 const OPENCODE_PORT = 4096;
-const OPENCODE_VERSION = "1.4.11";
+const OPENCODE_VERSION = "1.14.41";
 
 export const template = Template()
   .fromNodeImage("24")
