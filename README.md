@@ -4,7 +4,7 @@ Self-hosted background agents for your GitHub repos. Connect GitHub, choose a re
 
 ![Kill The Backlog session](docs/screenshot.png)
 
-Kill The Backlog is built for the "ship it from a prompt" loop: every session gets an isolated [E2B](https://e2b.dev/) VM, a cloned working tree, [opencode](https://opencode.ai/) running headless, realtime session updates in the browser, automatic commits, draft PR creation, and optional live app previews.
+Kill The Backlog is built for the "ship it from a prompt" loop: every session gets an isolated [E2B](https://e2b.dev/) VM, a cloned working tree, [opencode](https://opencode.ai/) running headless, hosted VS Code access through [code-server](https://github.com/coder/code-server), realtime session updates in the browser, automatic commits, draft PR creation, and optional live app previews.
 
 ## What It Does
 
@@ -14,6 +14,7 @@ Kill The Backlog is built for the "ship it from a prompt" loop: every session ge
 - Accepts follow-up prompts in the same session and supports aborting a running turn.
 - Commits sandbox changes on idle, pushes a `ktb/<sessionId>` branch, and opens a draft PR on the first commit.
 - Keeps the session available after idle by pausing the E2B sandbox instead of deleting it.
+- Exposes a hosted VS Code instance for each bootstrapped session so you can inspect or manually edit the sandbox working tree.
 - Optionally starts a target repo preview app from `.kill-the-backlog/preview.sh`, shows preview status/logs, and links to the public E2B preview URL.
 
 ## Quick Start
@@ -57,7 +58,7 @@ Both services have free tiers that are enough to try things out. `E2B_TEMPLATE_N
 
 ### 4. Build The E2B Sandbox Template
 
-Sessions launch from a custom E2B template with opencode pre-installed and served over HTTP. Publish it once to your E2B account:
+Sessions launch from a custom E2B template with opencode and code-server pre-installed. Publish it once to your E2B account:
 
 ```sh
 corepack enable pnpm
@@ -101,6 +102,10 @@ Preview behavior:
 - The session details panel shows preview status, stdout/stderr logs, and a restart action.
 - Restart stops the previous preview process when possible, clears the old error, and queues the preview worker again.
 - Preview logs are stored on the session and capped to the newest 200 entries.
+
+## Hosted VS Code
+
+Each bootstrapped session starts code-server on port `8080` against the cloned repo path. The session details panel shows an "Open VS Code" action that authenticates through Kill The Backlog and opens `https://8080-<sandboxId>.e2b.app`.
 
 ## Developing
 
@@ -148,11 +153,11 @@ devbox run -- 'pnpm tools:e2b-template e2b:build:dev'
 | `apps/main`          | React Router 7 + Express app. Hosts GitHub OAuth, session UI, API routes, Zero endpoints, and BullMQ workers. |
 | `apps/www`           | Astro marketing site.                                                                                         |
 | `packages/db`        | Prisma migrations, generated Kysely types, generated Zero schema, and shared DB helpers.                      |
-| `tools/e2b-template` | E2B template that installs opencode and exposes `opencode serve` on port `4096`.                              |
+| `tools/e2b-template` | E2B template that installs opencode and code-server for per-session agents and hosted editing.                |
 | PostgreSQL           | Source of truth for users, GitHub accounts, sessions, messages, previews, and preferences.                    |
 | Valkey               | Redis-compatible backing store for BullMQ queues.                                                             |
 | Zero cache           | Realtime sync layer between PostgreSQL and the browser.                                                       |
-| E2B sandboxes        | Per-session VMs that hold the cloned repo, opencode state, git branch, and optional preview app.              |
+| E2B sandboxes        | Per-session VMs that hold the cloned repo, opencode state, hosted editor, git branch, and optional preview.   |
 
 ## Deploying
 

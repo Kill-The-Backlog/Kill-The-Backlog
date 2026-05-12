@@ -5,6 +5,11 @@ import type { PreviewFailureStatus } from "#lib/session-preview.js";
 
 import { db } from "#lib/.server/clients/db.js";
 import { formatError } from "#lib/.server/format-error.js";
+import {
+  disconnectSandboxCommandHandleSafely,
+  STOPPED_SANDBOX_COMMAND_PROCESS,
+  stopSandboxCommandHandleSafely,
+} from "#lib/.server/sandbox-service/command-handle.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 import {
   PREVIEW_PORT,
@@ -65,22 +70,6 @@ export async function restartSessionPreview({
   await startSessionPreview({ clonePath, job, sandbox, sessionId });
 }
 
-async function disconnectPreviewHandleSafely({
-  handle,
-  job,
-}: {
-  handle: CommandHandle;
-  job: Job;
-}): Promise<void> {
-  try {
-    await handle.disconnect();
-  } catch (error) {
-    await job.log(
-      `[preview] failed to detach from preview process ${handle.pid}: ${formatError(error)}`,
-    );
-  }
-}
-
 async function handlePreviewNotReady({
   handle,
   job,
@@ -96,13 +85,18 @@ async function handlePreviewNotReady({
 }): Promise<void> {
   const stopResult =
     result.type === PREVIEW_STATUS.crashed
-      ? STOPPED_PREVIEW_PROCESS
-      : await stopPreviewHandleSafely({ handle, job });
+      ? STOPPED_SANDBOX_COMMAND_PROCESS
+      : await stopSandboxCommandHandleSafely({
+          handle,
+          job,
+          logPrefix: "preview",
+          processName: "preview",
+        });
 
   await markPreviewFailed({
     message: result.message,
     previewLogger,
-    previewProcessId: stopResult.previewProcessId,
+    previewProcessId: stopResult.remainingProcessId,
     sessionId,
     status: result.type,
   });
@@ -205,6 +199,7 @@ async function startSessionPreview({
       onStdout: (data) => {
         previewLogger.output("stdout", data);
       },
+      timeoutMs: 0,
     });
 
     await queryPatchSession(sessionId, {
@@ -234,7 +229,14 @@ async function startSessionPreview({
     const previewProcessId =
       handle === undefined
         ? null
-        : (await stopPreviewHandleSafely({ handle, job })).previewProcessId;
+        : (
+            await stopSandboxCommandHandleSafely({
+              handle,
+              job,
+              logPrefix: "preview",
+              processName: "preview",
+            })
+          ).remainingProcessId;
 
     await markPreviewFailed({
       message,
@@ -245,30 +247,14 @@ async function startSessionPreview({
     });
   } finally {
     if (handle !== undefined) {
-      await disconnectPreviewHandleSafely({ handle, job });
+      await disconnectSandboxCommandHandleSafely({
+        handle,
+        job,
+        logPrefix: "preview",
+        processName: "preview",
+      });
     }
     await previewLogger.flush();
-  }
-}
-
-async function stopPreviewHandleSafely({
-  handle,
-  job,
-}: {
-  handle: CommandHandle;
-  job: Job;
-}): Promise<PreviewStopResult> {
-  try {
-    const killed = await handle.kill();
-    if (killed) return STOPPED_PREVIEW_PROCESS;
-
-    await job.log(`[preview] preview process ${handle.pid} was not killed`);
-    return { previewProcessId: handle.pid, stopped: false };
-  } catch (error) {
-    await job.log(
-      `[preview] failed to kill preview process ${handle.pid}: ${formatError(error)}`,
-    );
-    return { previewProcessId: handle.pid, stopped: false };
   }
 }
 

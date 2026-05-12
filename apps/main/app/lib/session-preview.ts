@@ -1,9 +1,9 @@
 import { z } from "zod";
 
+import { sandboxPublicUrl } from "./sandbox-public-url.js";
+
 export const PREVIEW_PORT = 5173;
 export const PREVIEW_SCRIPT_PATH = ".kill-the-backlog/preview.sh";
-
-const E2B_DOMAIN = "e2b.app";
 
 export const PREVIEW_STATUS = {
   crashed: "crashed",
@@ -37,5 +37,5 @@ export type PreviewStatus =
   (typeof PREVIEW_STATUS)[keyof typeof PREVIEW_STATUS];
 
 export function previewBaseUrl(sandboxId: string): string {
-  return `https://${PREVIEW_PORT}-${sandboxId}.${E2B_DOMAIN}`;
+  return sandboxPublicUrl({ port: PREVIEW_PORT, sandboxId });
 }

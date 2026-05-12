@@ -60,6 +60,8 @@ model Session {
   e2bSandboxId        String?
   opencodeSessionId   String?
   opencodeStatus      String?
+  editorStatus        String?
+  editorErrorMessage  String?
   prNumber            Int?
   previewStatus       String?
   previewErrorMessage String?

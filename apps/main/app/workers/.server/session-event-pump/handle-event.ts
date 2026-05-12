@@ -58,7 +58,6 @@ export async function handleEvent(
       return;
 
     case "session.status": {
-      console.log("session.status", event.properties.status.type);
       await queryPatchSession(sessionId, {
         opencodeStatus: event.properties.status.type,
       });

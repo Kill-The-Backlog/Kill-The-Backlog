@@ -4,6 +4,7 @@ const OPENCODE_PORT = 4096;
 // Version 1.14.42 has a known issue (see: https://github.com/anomalyco/opencode/issues/26697);
 // pinning to the previous stable version.
 const OPENCODE_VERSION = "1.14.41";
+const CODE_SERVER_VERSION = "4.118.0";
 
 export const template = Template()
   .fromNodeImage("24")
@@ -18,6 +19,10 @@ export const template = Template()
       "mv /root/.opencode/bin/opencode /usr/local/bin/opencode",
       "rm -rf /root/.opencode",
     ],
+    { user: "root" },
+  )
+  .runCmd(
+    `curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=${CODE_SERVER_VERSION} --method=standalone --prefix=/usr/local`,
     { user: "root" },
   )
   // Global opencode config for the non-root sandbox user that runs

@@ -8,9 +8,10 @@ any missed state by fetching a snapshot of `/session/:id/message` on every
 
 ## Ports
 
-| Service  | Port | Notes                                                 |
-| -------- | ---- | ----------------------------------------------------- |
-| opencode | 4096 | Bound on `0.0.0.0`. Full opencode HTTP API available. |
+| Service     | Port | Notes                                                                          |
+| ----------- | ---- | ------------------------------------------------------------------------------ |
+| opencode    | 4096 | Bound on `0.0.0.0`. Full opencode HTTP API available.                          |
+| code-server | 8080 | Installed in the image; started per session after the target repo is cloned.   |
 
 ## Prerequisites
 
@@ -36,9 +37,14 @@ import { Sandbox } from "e2b";
 const sandbox = await Sandbox.create("e2b-template");
 
 const opencodeUrl = `https://${sandbox.getHost(4096)}`;
+const editorUrl = `https://${sandbox.getHost(8080)}`;
 
 // Hit opencode's API directly for everything: sessions, prompts, events, etc.
 await fetch(`${opencodeUrl}/session`, { method: "POST" /* ... */ });
+
+// Start code-server from the app worker once the repo exists, then open the
+// editor URL in the browser with the per-session password.
+console.log(editorUrl);
 
 // Subscribe to the live SSE stream. Note: opencode's /event does not support
 // Last-Event-ID or replay — clients must re-read `/session/:id/message` on

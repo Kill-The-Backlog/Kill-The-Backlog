@@ -25,6 +25,8 @@ export type Session = {
   e2bSandboxId: string | null;
   opencodeSessionId: string | null;
   opencodeStatus: string | null;
+  editorStatus: string | null;
+  editorErrorMessage: string | null;
   prNumber: number | null;
   previewStatus: string | null;
   previewErrorMessage: string | null;

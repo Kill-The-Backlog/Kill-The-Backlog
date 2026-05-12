@@ -20,6 +20,7 @@ import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
 
+import { EditorDetails } from "./editor-details.js";
 import { PreviewDetails } from "./preview-details.js";
 
 const opencodeTodoSchema = z.object({
@@ -71,6 +72,8 @@ export function Details({
         </DetailRow>
 
         <SessionPullRequestLink session={session} />
+
+        <EditorDetails session={session} />
 
         <PreviewDetails session={session} />
       </div>

@@ -59,6 +59,8 @@ export const sessionTable = table("Session")
     e2bSandboxId: string().optional(),
     opencodeSessionId: string().optional(),
     opencodeStatus: string().optional(),
+    editorStatus: string().optional(),
+    editorErrorMessage: string().optional(),
     prNumber: number().optional(),
     previewStatus: string().optional(),
     previewErrorMessage: string().optional(),
