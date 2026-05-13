@@ -1,60 +1,108 @@
+type ModelConfig = {
+  label: string;
+  modelID: string;
+};
+
+type ModelProviderConfig = {
+  apiKeyPlaceholder: string;
+  description: string;
+  id: string;
+  label: string;
+  models: readonly ModelConfig[];
+};
+
 // Static registry of opencode-routable models the user can choose from.
 // Keep this aligned with the providers configured inside the E2B template's
 // opencode runtime — these IDs are what opencode passes through to the
 // underlying provider, so they have to match the provider's wire format
 // (Anthropic uses dashes, e.g. `claude-opus-4-7`).
-export const MODELS = [
+export const MODEL_PROVIDERS = [
   {
-    id: "claude-opus-4-7",
-    label: "Claude Opus 4.7",
-    providerID: "anthropic",
+    apiKeyPlaceholder: "sk-ant-...",
+    description: "Claude models for broad coding work and deep reasoning.",
+    id: "anthropic",
+    label: "Anthropic",
+    models: [
+      {
+        label: "Claude Opus 4.7",
+        modelID: "claude-opus-4-7",
+      },
+      {
+        label: "Claude Sonnet 4.6",
+        modelID: "claude-sonnet-4-6",
+      },
+      {
+        label: "Claude Haiku 4.5",
+        modelID: "claude-haiku-4-5",
+      },
+    ],
   },
   {
-    id: "claude-sonnet-4-6",
-    label: "Claude Sonnet 4.6",
-    providerID: "anthropic",
+    apiKeyPlaceholder: "sk-...",
+    description: "GPT and Codex models for OpenAI-powered sessions.",
+    id: "openai",
+    label: "OpenAI",
+    models: [
+      {
+        label: "GPT-5.5",
+        modelID: "gpt-5.5",
+      },
+    ],
   },
-  {
-    id: "claude-haiku-4-5",
-    label: "Claude Haiku 4.5",
-    providerID: "anthropic",
-  },
-] as const;
+] as const satisfies readonly ModelProviderConfig[];
 
-export type ModelId = (typeof MODELS)[number]["id"];
+export type ProviderId = ModelProvider["id"];
 
-export const MODEL_IDS = MODELS.map((model) => model.id);
+type ModelProvider = (typeof MODEL_PROVIDERS)[number];
 
-// Narrows a raw `string` (e.g. a value read from the `Session.model` DB
-// column) to a `ModelId`. The DB column is just `String`, but every write
-// path validates against `MODEL_IDS`, so an unknown value here means the
-// row was written through a path that bypassed validation — surface that
-// loudly rather than silently dispatching to opencode with a bogus id.
-export function assertModelId(value: string): ModelId {
-  if (!MODELS.some((model) => model.id === value)) {
-    throw new Error(`Invalid model id: ${value}`);
-  }
-  return value as ModelId;
-}
+export const PROVIDER_IDS = MODEL_PROVIDERS.map((provider) => provider.id);
 
-// Looks up a human-readable label for a raw model id from the DB. Falls back
-// to the raw value so a stale `Session.model` (e.g. a model removed from
-// `MODELS` while old sessions still reference it) renders something rather
-// than crashing the UI.
-export function getModelLabel(value: string): string {
-  return MODELS.find((model) => model.id === value)?.label ?? value;
-}
+export type ModelSelectionValue = {
+  [Provider in ModelProvider as Provider["id"]]: `${Provider["id"]}:${Provider["models"][number]["modelID"]}`;
+}[ProviderId];
 
-// Resolves a `ModelId` into the `{ providerID, modelID }` shape opencode's
-// SDK expects for `session.promptAsync`. The lookup can't fail at runtime
-// because `ModelId` is constrained to ids that exist in `MODELS`.
-export function resolveModel(id: ModelId): {
+export const MODELS = MODEL_PROVIDERS.flatMap((provider) =>
+  provider.models.map((model) => ({
+    ...model,
+    providerID: provider.id,
+    providerLabel: provider.label,
+    value: `${provider.id}:${model.modelID}`,
+  })),
+) as readonly ModelEntry[];
+
+export type ModelEntry = {
+  label: string;
   modelID: string;
-  providerID: string;
-} {
-  const model = MODELS.find((entry) => entry.id === id);
+  providerID: ProviderId;
+  providerLabel: string;
+  value: ModelSelectionValue;
+};
+
+export const MODEL_SELECTION_VALUES = MODELS.map((model) => model.value) as [
+  ModelSelectionValue,
+  ...ModelSelectionValue[],
+];
+
+export function findModelByValue(value: string): ModelEntry | null {
+  return MODELS.find((model) => model.value === value) ?? null;
+}
+
+export function findProvider(provider: ProviderId) {
+  return MODEL_PROVIDERS.find((entry) => entry.id === provider) ?? null;
+}
+
+export function getModelByValue(value: string): ModelEntry {
+  const model = findModelByValue(value);
   if (!model) {
-    throw new Error(`Unknown model id: ${id}`);
+    throw new Error(`Unknown model selection: ${value}`);
   }
-  return { modelID: model.id, providerID: model.providerID };
+  return model;
+}
+
+export function getProvider(provider: ProviderId) {
+  const config = findProvider(provider);
+  if (!config) {
+    throw new Error(`Unknown model provider: ${provider}`);
+  }
+  return config;
 }

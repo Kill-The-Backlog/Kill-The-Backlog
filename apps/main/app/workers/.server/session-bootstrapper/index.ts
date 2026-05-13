@@ -1,12 +1,13 @@
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
 import { Sandbox } from "e2b";
 
-import type { ModelId } from "#lib/opencode/models.js";
+import type { ModelSelectionValue } from "#lib/opencode/models.js";
 
 import { db } from "#lib/.server/clients/db.js";
 import { serverEnv } from "#lib/.server/env/server.js";
 import { formatError } from "#lib/.server/format-error.js";
 import { opencodeBaseUrl } from "#lib/.server/opencode/base-url.js";
+import { resolveProviderApiKey } from "#lib/.server/provider-api-keys/api-keys.js";
 import { branchNameForSession } from "#lib/.server/sandbox-git/branch-name.js";
 import { clonePathForRepo } from "#lib/.server/sandbox-git/clone-path.js";
 import { configureGitIdentity } from "#lib/.server/sandbox-git/configure-identity.js";
@@ -14,13 +15,14 @@ import { createSessionBranch } from "#lib/.server/sandbox-git/create-branch.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
 import { defineWorker } from "#lib/.server/workers/define-worker.js";
+import { getModelByValue } from "#lib/opencode/models.js";
 import { sessionEditorStarterWorker } from "#workers/.server/session-editor-starter/index.js";
 import { sessionPreviewStarterWorker } from "#workers/.server/session-preview-starter/index.js";
 
 type JobData = {
   baseBranch: string;
   initialPrompt: string;
-  model: ModelId;
+  modelSelection: ModelSelectionValue;
   repoFullName: string;
   sessionId: string;
   userId: number;
@@ -39,8 +41,14 @@ type JobData = {
 export const sessionBootstrapperWorker = defineWorker<JobData>(
   "session-bootstrapper",
   async (job) => {
-    const { baseBranch, initialPrompt, model, repoFullName, sessionId, userId } =
-      job.data;
+    const {
+      baseBranch,
+      initialPrompt,
+      modelSelection,
+      repoFullName,
+      sessionId,
+      userId,
+    } = job.data;
 
     // Clear any prior errorMessage so a retry starts from a clean slate and
     // the UI's error alert reflects only this attempt. If bootstrapping fails
@@ -109,22 +117,36 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
       // don't need to re-set the directory.
       const client = createOpencodeClient({ baseUrl, directory: clonePath });
 
-      // Register the anthropic API key with the in-sandbox opencode runtime.
+      const selectedModel = getModelByValue(modelSelection);
+      const providerApiKey = await resolveProviderApiKey({
+        providerID: selectedModel.providerID,
+        userId,
+      });
+      if (!providerApiKey) {
+        throw new Error(
+          `${selectedModel.providerLabel} API key not configured`,
+        );
+      }
+
+      // Register the selected provider's API key with the in-sandbox opencode runtime.
       // The template doesn't bake any provider auth into the snapshot, so
-      // without this opencode has no `anthropic` provider registered and
+      // without this opencode has no selected provider registered and
       // every prompt fails with `ProviderModelNotFoundError` — even though
       // the model id is valid in the models.dev registry. Setting auth via
       // the API both writes `~/.local/share/opencode/auth.json` and updates
       // opencode's in-memory provider state, which is captured by E2B's
       // pause/resume snapshot so it survives sandbox hibernation.
       const authResult = await client.auth.set({
-        auth: { key: serverEnv.ANTHROPIC_API_KEY, type: "api" },
-        providerID: "anthropic",
+        auth: { key: providerApiKey, type: "api" },
+        providerID: selectedModel.providerID,
       });
       if (authResult.error) {
-        throw new Error("Failed to set anthropic auth on opencode", {
-          cause: authResult.error,
-        });
+        throw new Error(
+          `Failed to set ${selectedModel.providerLabel} auth on opencode`,
+          {
+            cause: authResult.error,
+          },
+        );
       }
 
       const opencodeSession = await client.session.create();
@@ -150,7 +172,7 @@ export const sessionBootstrapperWorker = defineWorker<JobData>(
 
       await dispatchPrompt({
         e2bSandboxId: sandbox.sandboxId,
-        model,
+        modelSelection,
         opencodeSessionId: opencodeSession.data.id,
         sessionId,
         text: initialPrompt,

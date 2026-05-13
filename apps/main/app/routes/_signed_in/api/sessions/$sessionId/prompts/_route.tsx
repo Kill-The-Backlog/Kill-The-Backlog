@@ -6,7 +6,6 @@ import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
 import { dispatchPrompt } from "#lib/.server/sessions/dispatch-prompt.js";
 import { queryPatchSession } from "#lib/.server/sessions/patch-session.js";
-import { assertModelId } from "#lib/opencode/models.js";
 
 import type { Route } from "./+types/_route";
 
@@ -60,7 +59,7 @@ export const action = async ({
 
   await dispatchPrompt({
     e2bSandboxId: session.e2bSandboxId,
-    model: assertModelId(session.model),
+    modelSelection: session.model,
     opencodeSessionId: session.opencodeSessionId,
     sessionId,
     text: result.data.prompt,

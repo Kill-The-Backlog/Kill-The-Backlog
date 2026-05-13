@@ -74,6 +74,14 @@ export type UserPreferences = {
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
+export type UserProviderApiKey = {
+  userId: number;
+  provider: string;
+  encryptedKey: string;
+  keyPreview: string;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
+};
 export type DB = {
   GitHubAccount: GitHubAccount;
   Session: Session;
@@ -81,4 +89,5 @@ export type DB = {
   SessionMessagePart: SessionMessagePart;
   User: User;
   UserPreferences: UserPreferences;
+  UserProviderApiKey: UserProviderApiKey;
 };

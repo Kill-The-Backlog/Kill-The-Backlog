@@ -15,26 +15,27 @@ datasource db {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
+  id              Int                  @id @default(autoincrement())
   email           String
   displayName     String
   avatarUrl       String?
-  isStaff         Boolean          @default(false)
+  isStaff         Boolean              @default(false)
   githubAccount   GitHubAccount?
+  providerApiKeys UserProviderApiKey[]
   sessions        Session[]
   userPreferences UserPreferences?
-  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  createdAt       DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @db.Timestamptz(3)
 }
 
 model UserPreferences {
-  userId           Int      @id
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lastRepoFullName String?
-  lastBaseBranch   String?
-  lastModel        String?
-  createdAt        DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+  userId            Int      @id
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastRepoFullName  String?
+  lastBaseBranch    String?
+  lastModel         String?
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model GitHubAccount {
@@ -46,6 +47,18 @@ model GitHubAccount {
   oauthAccessToken String
   createdAt        DateTime @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model UserProviderApiKey {
+  userId       Int
+  provider     String
+  encryptedKey String
+  keyPreview   String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  @@id([userId, provider])
 }
 
 model Session {

@@ -1,17 +1,22 @@
 import { CaretUpDownIcon } from "@phosphor-icons/react";
 
-import type { ModelId } from "#lib/opencode/models.js";
+import type { ModelSelectionValue } from "#lib/opencode/models.js";
 
-import ClaudeMark from "#assets/claude-mark.svg?react";
+import { ModelMark } from "#components/model-mark.js";
 import { Button } from "#components/ui/button.js";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu.js";
-import { getModelLabel, MODELS } from "#lib/opencode/models.js";
+import {
+  getModelByValue,
+  MODEL_PROVIDERS,
+} from "#lib/opencode/models.js";
 
 export function ModelPicker({
   className,
@@ -19,29 +24,40 @@ export function ModelPicker({
   value,
 }: {
   className?: string;
-  onChange: (id: ModelId) => void;
-  value: ModelId;
+  onChange: (selection: ModelSelectionValue) => void;
+  value: ModelSelectionValue;
 }) {
+  const selectedModel = getModelByValue(value);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className={className} type="button" variant="secondary">
-          <ClaudeMark data-icon="inline-start" />
-          {getModelLabel(value)}
+          <ModelMark data-icon="inline-start" model={selectedModel} />
+          {selectedModel.label}
           <CaretUpDownIcon data-icon="inline-end" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">
         <DropdownMenuRadioGroup
           onValueChange={(next) => {
-            onChange(next as ModelId);
+            onChange(getModelByValue(next).value);
           }}
-          value={value}
+          value={selectedModel.value}
         >
-          {MODELS.map((model) => (
-            <DropdownMenuRadioItem key={model.id} value={model.id}>
-              {model.label}
-            </DropdownMenuRadioItem>
+          {MODEL_PROVIDERS.map((provider, index) => (
+            <div key={provider.id}>
+              {index > 0 ? <DropdownMenuSeparator /> : null}
+              <DropdownMenuLabel>{provider.label}</DropdownMenuLabel>
+              {provider.models.map((model) => (
+                <DropdownMenuRadioItem
+                  key={model.modelID}
+                  value={`${provider.id}:${model.modelID}`}
+                >
+                  {model.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </div>
           ))}
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>

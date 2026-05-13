@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import invariant from "tiny-invariant";
 import { z } from "zod";
 
-import type { ModelId } from "#lib/opencode/models.js";
+import type { ModelSelectionValue } from "#lib/opencode/models.js";
 import type { GitHubRepoItem } from "#routes/_signed_in/api/repos/_index/_route.js";
 
 import { BranchPicker } from "#components/branch-picker.js";
@@ -15,18 +15,23 @@ import { Button } from "#components/ui/button.js";
 import { Textarea } from "#components/ui/textarea.js";
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { MODEL_IDS, MODELS } from "#lib/opencode/models.js";
+import { hasConfiguredProviderApiKey } from "#lib/.server/provider-api-keys/api-keys.js";
+import {
+  findModelByValue,
+  getModelByValue,
+  MODEL_SELECTION_VALUES,
+} from "#lib/opencode/models.js";
 import { submitPrefs } from "#lib/user-preferences/submit-prefs.js";
 import { sessionBootstrapperWorker } from "#workers/.server/session-bootstrapper/index.js";
 import { sessionTitlerWorker } from "#workers/.server/session-titler/index.js";
 
 import type { Route } from "./+types/_route";
 
-const DEFAULT_MODEL: ModelId = "claude-opus-4-7";
+const DEFAULT_MODEL: ModelSelectionValue = "anthropic:claude-opus-4-7";
 
 const requestSchema = z.object({
   baseBranch: z.string().min(1, "Branch is required"),
-  model: z.enum(MODEL_IDS),
+  model: z.enum(MODEL_SELECTION_VALUES),
   prompt: z.string().min(1, "Prompt is required"),
   repoFullName: z
     .string()
@@ -65,6 +70,20 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
     );
   }
 
+  const selectedModel = getModelByValue(result.data.model);
+  const hasProviderApiKey = await hasConfiguredProviderApiKey({
+    providerID: selectedModel.providerID,
+    userId: user.id,
+  });
+  if (!hasProviderApiKey) {
+    return data(
+      {
+        error: `${selectedModel.providerLabel} API key is not configured. Add one in Settings before starting a session with ${selectedModel.providerLabel} models`,
+      },
+      { status: 400 },
+    );
+  }
+
   const sessionId = crypto.randomUUID();
 
   await db
@@ -73,7 +92,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
       baseBranch: result.data.baseBranch,
       id: sessionId,
       initialPrompt: result.data.prompt,
-      model: result.data.model,
+      model: selectedModel.value,
       repoFullName: result.data.repoFullName,
       updatedAt: new Date(),
       userId: user.id,
@@ -94,7 +113,7 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
       {
         baseBranch: result.data.baseBranch,
         initialPrompt: result.data.prompt,
-        model: result.data.model,
+        modelSelection: selectedModel.value,
         repoFullName: result.data.repoFullName,
         sessionId,
         userId: user.id,
@@ -123,8 +142,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   const [selectedBranch, setSelectedBranch] = useState(
     preferences.lastBaseBranch,
   );
-  const [selectedModel, setSelectedModel] = useState(
-    MODELS.find((m) => m.id === preferences.lastModel)?.id ?? DEFAULT_MODEL,
+  const [selectedModel, setSelectedModel] = useState<ModelSelectionValue>(
+    findModelByValue(preferences.lastModel ?? "")?.value ?? DEFAULT_MODEL,
   );
   const [prompt, setPrompt] = useState("");
 
@@ -156,9 +175,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     });
   };
 
-  const handleSelectModel = (model: ModelId) => {
-    setSelectedModel(model);
-    submitPrefs({ lastModel: model });
+  const handleSelectModel = (modelSelection: ModelSelectionValue) => {
+    setSelectedModel(modelSelection);
+    submitPrefs({
+      lastModel: modelSelection,
+    });
   };
 
   useEffect(() => {

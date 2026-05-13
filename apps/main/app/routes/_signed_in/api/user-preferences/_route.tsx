@@ -3,13 +3,13 @@ import { z } from "zod";
 
 import { requireUser } from "#lib/.server/auth/auth-context.js";
 import { db } from "#lib/.server/clients/db.js";
-import { MODEL_IDS } from "#lib/opencode/models.js";
+import { MODEL_SELECTION_VALUES } from "#lib/opencode/models.js";
 
 import type { Route } from "./+types/_route";
 
 const requestSchema = z.object({
   lastBaseBranch: z.string().min(1).optional(),
-  lastModel: z.enum(MODEL_IDS).optional(),
+  lastModel: z.enum(MODEL_SELECTION_VALUES).optional(),
   lastRepoFullName: z
     .string()
     .min(1)

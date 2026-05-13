@@ -1,8 +1,6 @@
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
 
-import type { ModelId } from "#lib/opencode/models.js";
-
-import { resolveModel } from "#lib/opencode/models.js";
+import { getModelByValue } from "#lib/opencode/models.js";
 
 import { opencodeBaseUrl } from "./base-url.js";
 
@@ -11,26 +9,29 @@ import { opencodeBaseUrl } from "./base-url.js";
 // paused E2B's edge proxy holds the request open until the VM resumes —
 // callers don't need to resume explicitly or retry for the wake-up path.
 //
-// This is a pure opencode wrapper: it takes the IDs it needs and never
-// touches our DB. Callers are responsible for resolving the IDs (from a
-// route's auth query, the bootstrapper's freshly-created sandbox, etc.).
+// This is a pure opencode wrapper: it takes the session IDs plus our canonical
+// model selection value and never touches our DB.
 export async function sendPrompt({
   e2bSandboxId,
-  model,
+  modelSelection,
   opencodeSessionId,
   text,
 }: {
   e2bSandboxId: string;
-  model: ModelId;
+  modelSelection: string;
   opencodeSessionId: string;
   text: string;
 }): Promise<void> {
+  const model = getModelByValue(modelSelection);
   const client = createOpencodeClient({
     baseUrl: opencodeBaseUrl(e2bSandboxId),
   });
 
   const result = await client.session.promptAsync({
-    model: resolveModel(model),
+    model: {
+      modelID: model.modelID,
+      providerID: model.providerID,
+    },
     parts: [{ text, type: "text" }],
     sessionID: opencodeSessionId,
   });

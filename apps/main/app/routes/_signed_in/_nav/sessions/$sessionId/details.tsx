@@ -12,10 +12,10 @@ import { z } from "zod";
 
 import type { queries } from "#zero/queries.js";
 
-import ClaudeMark from "#assets/claude-mark.svg?react";
+import { ModelMark } from "#components/model-mark.js";
 import { RelativeTime } from "#components/relative-time.js";
 import { Avatar, AvatarFallback, AvatarImage } from "#components/ui/avatar.js";
-import { getModelLabel } from "#lib/opencode/models.js";
+import { findModelByValue } from "#lib/opencode/models.js";
 import { cn } from "#lib/utils/cn.js";
 import { getInitials } from "#lib/utils/get-initials.js";
 import { useRootLoaderData } from "#root.js";
@@ -42,7 +42,8 @@ export function Details({
   const { user } = useRootLoaderData();
   invariant(user, "User is required");
 
-  const modelLabel = getModelLabel(session.model);
+  const model = findModelByValue(session.model);
+  const modelLabel = model?.label ?? session.model;
   const todos = opencodeTodosSchema.safeParse(session.todos).data ?? [];
 
   return (
@@ -67,7 +68,7 @@ export function Details({
         </DetailRow>
 
         <DetailRow>
-          <ClaudeMark className="size-4" />
+          <ModelMark className="size-4" model={model} />
           <span className="truncate">{modelLabel}</span>
         </DetailRow>
 

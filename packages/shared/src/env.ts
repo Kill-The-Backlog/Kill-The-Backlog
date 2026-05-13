@@ -4,6 +4,12 @@ export const zBooleanString = z
   .enum(["true", "false"])
   .transform((v) => v === "true");
 
+export const zOptionalNonEmptyString = z
+  .string()
+  .trim()
+  .transform((value) => (value === "" ? undefined : value))
+  .optional();
+
 export const requireEnv = <T extends z.ZodObject>(
   schema: T,
   env: Record<string, unknown>,

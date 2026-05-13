@@ -2,10 +2,11 @@ import type { QueryRowType } from "@rocicorp/zero";
 
 import type { queries } from "#zero/queries.js";
 
-import ClaudeMark from "#assets/claude-mark.svg?react";
+import { ModelMark } from "#components/model-mark.js";
 import { Alert, AlertDescription } from "#components/ui/alert.js";
 import { Avatar, AvatarFallback } from "#components/ui/avatar.js";
 import { useStickyScroll } from "#hooks/use-sticky-scroll.js";
+import { findModelByValue } from "#lib/opencode/models.js";
 import { cn } from "#lib/utils/cn.js";
 
 import type { TimelineItem } from "./timeline.js";
@@ -26,13 +27,14 @@ export function Messages({
 }) {
   const timeline = buildTimeline(session.messages);
   const contentRef = useStickyScroll<HTMLDivElement>();
+  const model = findModelByValue(session.model);
 
   return (
     <div
       className={cn("flex flex-col gap-3 text-sm", className)}
       ref={contentRef}
     >
-      {timeline.map(renderTimelineItem)}
+      {timeline.map((item) => renderTimelineItem(item, model))}
 
       {session.errorMessage && (
         <Alert className="mt-3" variant="destructive">
@@ -45,21 +47,23 @@ export function Messages({
 
 function AgentRow({
   children,
+  model,
   showAvatar = false,
 }: {
   children: React.ReactNode;
+  model: ReturnType<typeof findModelByValue>;
   showAvatar?: boolean;
 }) {
   return (
     <div className="flex gap-2">
       {/* The slot always reserves its width so every agent row — text,
           reasoning, tools, Explored groups — lines up flush with the text
-          card's left edge, whether or not the Claude mark is shown. */}
+          card's left edge, whether or not the model mark is shown. */}
       <div className="w-6 shrink-0">
         {showAvatar && (
           <Avatar size="sm">
             <AvatarFallback>
-              <ClaudeMark className="size-3.5" />
+              <ModelMark className="size-3.5" model={model} />
             </AvatarFallback>
           </Avatar>
         )}
@@ -69,17 +73,24 @@ function AgentRow({
   );
 }
 
-function renderTimelineItem(item: TimelineItem) {
+function renderTimelineItem(
+  item: TimelineItem,
+  model: ReturnType<typeof findModelByValue>,
+) {
   switch (item.kind) {
     case "group":
       return (
-        <AgentRow key={item.keyId}>
+        <AgentRow key={item.keyId} model={model}>
           <ToolGroup parts={item.parts} />
         </AgentRow>
       );
     case "part":
       return (
-        <AgentRow key={item.part.id} showAvatar={item.part.type === "text"}>
+        <AgentRow
+          key={item.part.id}
+          model={model}
+          showAvatar={item.part.type === "text"}
+        >
           <PartRenderer part={item.part} />
         </AgentRow>
       );

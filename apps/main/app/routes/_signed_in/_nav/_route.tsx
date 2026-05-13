@@ -1,7 +1,12 @@
 import type { Selectable } from "@ktb/db/kysely-types";
 import type { User } from "@ktb/db/types";
 
-import { CaretUpDownIcon, SignOutIcon, SwordIcon } from "@phosphor-icons/react";
+import {
+  CaretUpDownIcon,
+  GearSixIcon,
+  SignOutIcon,
+  SwordIcon,
+} from "@phosphor-icons/react";
 import { useQuery, useZero } from "@rocicorp/zero/react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
@@ -241,6 +246,13 @@ function UserMenu() {
             <div className="px-1 py-1.5">
               <UserInfo showEmail={true} user={user} />
             </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link draggable={false} to="/settings">
+                <GearSixIcon />
+                Settings
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link draggable={false} onClick={handleSignOut} to="/sign-out">

@@ -47,6 +47,17 @@ export const gitHubAccountTable = table("GitHubAccount")
   })
   .primaryKey("id");
 
+export const userProviderApiKeyTable = table("UserProviderApiKey")
+  .columns({
+    userId: number(),
+    provider: string(),
+    encryptedKey: string(),
+    keyPreview: string(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey("userId", "provider");
+
 export const sessionTable = table("Session")
   .columns({
     id: string(),
@@ -105,6 +116,11 @@ export const userTableRelationships = relationships(userTable, ({ one, many }) =
     destField: ["userId"],
     destSchema: gitHubAccountTable,
   }),
+  providerApiKeys: many({
+    sourceField: ["id"],
+    destField: ["userId"],
+    destSchema: userProviderApiKeyTable,
+  }),
   sessions: many({
     sourceField: ["id"],
     destField: ["userId"],
@@ -124,6 +140,13 @@ export const userPreferencesTableRelationships = relationships(userPreferencesTa
   })
 }));
 export const gitHubAccountTableRelationships = relationships(gitHubAccountTable, ({ one }) => ({
+  user: one({
+    sourceField: ["userId"],
+    destField: ["id"],
+    destSchema: userTable,
+  })
+}));
+export const userProviderApiKeyTableRelationships = relationships(userProviderApiKeyTable, ({ one }) => ({
   user: one({
     sourceField: ["userId"],
     destField: ["id"],
@@ -170,6 +193,7 @@ export const schema = createSchema({
     userTable,
     userPreferencesTable,
     gitHubAccountTable,
+    userProviderApiKeyTable,
     sessionTable,
     sessionMessageTable,
     sessionMessagePartTable,
@@ -178,6 +202,7 @@ export const schema = createSchema({
     userTableRelationships,
     userPreferencesTableRelationships,
     gitHubAccountTableRelationships,
+    userProviderApiKeyTableRelationships,
     sessionTableRelationships,
     sessionMessageTableRelationships,
     sessionMessagePartTableRelationships,
