@@ -24,7 +24,7 @@ importers:
         specifier: ^15.0.0
         version: 15.1.2
       turbo:
-        specifier: ^2.9.9
+        specifier: ^2.9.12
         version: 2.9.12
 
   apps/main:
