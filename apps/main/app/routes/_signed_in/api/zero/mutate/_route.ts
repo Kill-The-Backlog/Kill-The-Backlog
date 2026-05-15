@@ -3,7 +3,7 @@ import { handleMutateRequest } from "@rocicorp/zero/server";
 import { data } from "react-router";
 
 import { getUser } from "#lib/.server/auth/auth-context.js";
-import { db } from "#zero/db.js";
+import { dbProvider } from "#zero/db-provider.js";
 import { mutators } from "#zero/mutators.js";
 
 import type { Route } from "./+types/_route.js";
@@ -19,13 +19,14 @@ export async function action({ context, request }: Route.ActionArgs) {
 
   const { user } = result;
 
-  return handleMutateRequest(
-    db,
-    (transact) =>
+  return handleMutateRequest({
+    dbProvider,
+    handler: (transact) =>
       transact((tx, name, args) => {
         const mutator = mustGetMutator(mutators, name);
         return mutator.fn({ args, ctx: { userId: user.id }, tx });
       }),
     request,
-  );
+    userID: String(user.id),
+  });
 }

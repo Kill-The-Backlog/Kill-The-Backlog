@@ -3,4 +3,5 @@ import { zeroNodePg } from "@rocicorp/zero/server/adapters/pg";
 
 import { serverEnv } from "#lib/.server/env/server.js";
 
-export const db = zeroNodePg(schema, serverEnv.DB_URL);
+// @todo: Switch to `zeroKysely`?
+export const dbProvider = zeroNodePg(schema, serverEnv.DB_URL);

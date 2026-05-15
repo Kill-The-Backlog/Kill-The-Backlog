@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.16.0/.schema/devbox.schema.json",
   "packages": [
     "nodejs-slim@22",
     "postgresql_18@18",

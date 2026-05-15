@@ -6,6 +6,7 @@
   "scripts": {
     "apps:main": "pnpm --filter \"@ktb/main\"",
     "apps:www": "pnpm --filter \"@ktb/www\"",
+    "clean:node_modules": "find . -name node_modules -type d -prune -exec rm -rf '{}' +",
     "packages:db": "pnpm --filter \"@ktb/db\"",
     "packages:shared": "pnpm --filter \"@ktb/shared\"",
     "prettier:check": "prettier --check .",

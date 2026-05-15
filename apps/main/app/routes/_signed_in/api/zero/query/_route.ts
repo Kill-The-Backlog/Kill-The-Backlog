@@ -11,17 +11,21 @@ import type { Route } from "./+types/_route.js";
 export async function action({ context, request }: Route.ActionArgs) {
   const result = await getUser(context);
   if (!result) {
-    throw data({ error: "You must be signed in to access this" }, { status: 401 });
+    throw data(
+      { error: "You must be signed in to access this" },
+      { status: 401 },
+    );
   }
 
   const { user } = result;
 
-  return handleQueryRequest(
-    (name, args) => {
+  return handleQueryRequest({
+    handler: (name, args) => {
       const query = mustGetQuery(queries, name);
       return query.fn({ args, ctx: { userId: user.id } });
     },
-    schema,
     request,
-  );
+    schema,
+    userID: String(user.id),
+  });
 }

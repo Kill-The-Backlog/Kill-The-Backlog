@@ -1,10 +1,10 @@
+import type { Schema } from "@ktb/db/zero";
+
+import { defineQueriesWithType, defineQueryWithType } from "@rocicorp/zero";
+
 export type ZeroContext = {
   userId: number;
 };
 
-declare module "@rocicorp/zero" {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-  interface DefaultTypes {
-    context: ZeroContext;
-  }
-}
+export const defineQuery = defineQueryWithType<Schema, ZeroContext>();
+export const defineQueries = defineQueriesWithType<Schema>();
