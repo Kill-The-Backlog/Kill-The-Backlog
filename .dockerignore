@@ -31,7 +31,6 @@ setup-devbox.sh
 .helm
 .helmignore
 docker-compose.yml
-Dockerfile
 process-compose.yaml
 werf.yaml
 
