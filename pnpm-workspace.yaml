@@ -4,8 +4,8 @@ packages:
   - tools/*
 
 allowBuilds:
-  '@prisma/engines': true
-  '@rocicorp/zero-sqlite3': true
+  "@prisma/engines": true
+  "@rocicorp/zero-sqlite3": true
   esbuild: true
   fsevents: true
   msgpackr-extract: true
@@ -13,15 +13,3 @@ allowBuilds:
   prisma: true
   protobufjs: true
   sharp: true
-
-onlyBuiltDependencies:
-  - "@prisma/engines"
-  - "@tailwindcss/oxide"
-  - core-js
-  - esbuild
-  - fsevents
-  - msgpackr-extract
-  - msw
-  - prisma
-  - protobufjs
-  - sharp
