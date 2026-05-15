@@ -13,6 +13,8 @@ spec:
       {{- include "app.selectorLabels" $ctx | nindent 6 }}
   template:
     metadata:
+      annotations:
+        checksum/main-env-vars: {{ include (print $.Template.BasePath "/main-env-vars-secret.yaml") . | sha256sum }}
       labels:
         {{- include "app.labels" $ctx | nindent 8 }}
     spec:

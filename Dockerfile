@@ -66,4 +66,4 @@ RUN apt-get update -qq && \
 COPY --from=builder /db-deployment /db
 
 COPY --from=builder /main-deployment /app
-CMD ["bash", "-c", "(cd /db && exec pnpm prisma migrate deploy) && pnpm start"]
+CMD ["bash", "-c", "(cd /db && ./node_modules/.bin/prisma migrate deploy) && node server.ts"]

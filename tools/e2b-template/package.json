@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "e2b:build:dev": "node --experimental-strip-types build.dev.ts",
-    "e2b:build:prod": "node --experimental-strip-types build.prod.ts",
+    "e2b:build:dev": "node build.dev.ts",
+    "e2b:build:prod": "node build.prod.ts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit"

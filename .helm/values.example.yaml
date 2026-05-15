@@ -8,10 +8,14 @@ baseDomain: example.com
 wwwBucketHostname: example.cdn.com
 
 mainEnvVars:
+  ANTHROPIC_API_KEY:
   DB_URL:
+  E2B_API_KEY:
   GITHUB_OAUTH_CLIENT_ID:
   GITHUB_OAUTH_CLIENT_SECRET:
   GITHUB_OAUTH_REDIRECT_URI: https://ktb.example.com/auth/github/callback
   MAIN_ORIGIN: https://ktb.example.com
   REDIS_URL:
   SESSION_SECRET:
+  E2B_TEMPLATE_NAME:
+  PROVIDER_API_KEY_ENCRYPTION_SECRET:
