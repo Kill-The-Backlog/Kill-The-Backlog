@@ -1,7 +1,7 @@
 #
 # Base
 #
-FROM node:22.21-slim AS base
+FROM node:24.15-slim AS base
 
 WORKDIR /app
 

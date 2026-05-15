@@ -1,6 +1,6 @@
 {
   "packages": [
-    "nodejs-slim@22",
+    "nodejs@24",
     "postgresql_18@18",
     "valkey@8",
     "nginx@latest",
